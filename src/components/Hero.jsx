@@ -59,7 +59,7 @@ export default function Hero() {
           </div>
 
           <img
-            src="/img/ilustraciones/hero-hogar.svg"
+            src="/img/ilustraciones/hero-familia.svg"
             alt={t.hero.imageAlt}
             width="600"
             height="528"
