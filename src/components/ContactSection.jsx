@@ -13,7 +13,7 @@ import {
   sendLead,
   wasRecentlyConfirmed,
 } from "../lib/leads.js";
-import { WhatsAppLink } from "./ui.jsx";
+import { FacebookLink, WhatsAppLink } from "./ui.jsx";
 
 const FIELD_ORDER = ["service", "name", "phone", "zipCode"];
 const EMPTY_FORM = { name: "", phone: "", zipCode: "", company: "" };
@@ -177,6 +177,8 @@ export default function ContactSection({ selectedService, onSelectService }) {
               {c.whatsapp}
             </WhatsAppLink>
           </div>
+
+          <FacebookLink variant="light" label className="mt-3 px-6 py-3.5" />
 
           <img
             src="/img/ilustraciones/asesoria.svg"

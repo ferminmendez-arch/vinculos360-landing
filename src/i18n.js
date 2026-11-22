@@ -27,6 +27,7 @@ const es = {
   whatsappPrefix: "Escríbenos por ",
   newTab: "(se abre en una nueva pestaña)",
   tagline: "Conectamos lo que te importa",
+  facebook: "Síguenos en Facebook",
 
   hero: {
     badge: "Electricidad · Internet · Seguridad · Otros servicios",
@@ -182,6 +183,7 @@ const en = {
   whatsappPrefix: "Message us on ",
   newTab: "(opens in a new tab)",
   tagline: "Connecting what matters to you",
+  facebook: "Follow us on Facebook",
 
   hero: {
     badge: "Electricity · Internet · Security · Other services",

@@ -10,6 +10,8 @@ export const WHATSAPP_NUMBER = "12818257327";
 export const PHONE_E164 = "+12818257327";
 export const PHONE_DISPLAY = "(281) 825-7327";
 
+export const FACEBOOK_URL = "https://www.facebook.com/vinculos360";
+
 /*
   Endpoint de Google Apps Script (/exec) que guarda los leads en la
   hoja "Leads". Se puede sobrescribir con VITE_LEADS_ENDPOINT (por ejemplo,

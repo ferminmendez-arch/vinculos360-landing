@@ -1,5 +1,6 @@
 import { Globe, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl } from "../lib/whatsapp.js";
+import { FACEBOOK_URL } from "../config.js";
 import { alternateUrl, useLang, useStrings } from "../i18n.js";
 
 export function SectionHeading({ eyebrow, title, description, tone = "light", id }) {
@@ -89,6 +90,31 @@ export function LanguageSwitch({ className = "" }) {
       <Globe className="hidden h-4 w-4 sm:block" aria-hidden="true" />
       <span aria-hidden="true">{t.switchTo.short}</span>
       <span className="sr-only">{t.switchTo.label}</span>
+    </a>
+  );
+}
+
+const FB_VARIANTS = {
+  solid: "bg-[#1877f2] text-white hover:bg-[#0f5fc7]",
+  light: "border border-white/25 bg-white/10 text-white hover:bg-white/20",
+};
+
+/* Enlace a la página de Facebook de Vínculos 360. */
+export function FacebookLink({ variant = "solid", label = false, className = "" }) {
+  const t = useStrings();
+  return (
+    <a
+      href={FACEBOOK_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={t.facebook}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors ${FB_VARIANTS[variant]} ${className}`}
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor" aria-hidden="true">
+        <path d="M13.5 21v-7.5h2.53l.38-2.94H13.5V8.69c0-.85.24-1.43 1.46-1.43h1.56V4.63a20.9 20.9 0 0 0-2.27-.12c-2.25 0-3.79 1.37-3.79 3.9v2.15H7.92v2.94h2.54V21z" />
+      </svg>
+      {label ? <span>{t.facebook}</span> : <span className="sr-only">{t.facebook}</span>}
+      <span className="sr-only">{t.newTab}</span>
     </a>
   );
 }

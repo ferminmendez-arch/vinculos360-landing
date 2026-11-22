@@ -2,7 +2,7 @@ import { Phone } from "lucide-react";
 import { SECTION_IDS } from "../content.js";
 import { useStrings } from "../i18n.js";
 import { PHONE_DISPLAY, PHONE_E164 } from "../config.js";
-import { LanguageSwitch, Logo, WhatsAppLink } from "./ui.jsx";
+import { FacebookLink, LanguageSwitch, Logo, WhatsAppLink } from "./ui.jsx";
 
 export default function Footer() {
   const t = useStrings();
@@ -42,6 +42,7 @@ export default function Footer() {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <LanguageSwitch />
             <WhatsAppLink className="px-5 py-2.5 text-sm">WhatsApp</WhatsAppLink>
+            <FacebookLink className="h-11 w-11" />
           </div>
         </div>
       </div>
