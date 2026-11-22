@@ -2,6 +2,8 @@ import { ArrowRight, CircleCheck, MessageCircle } from "lucide-react";
 import { useStrings } from "../i18n.js";
 import { WhatsAppLink } from "./ui.jsx";
 
+const HERO_SIZES = "(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 100vw";
+
 export default function Hero() {
   const t = useStrings();
   return (
@@ -58,15 +60,27 @@ export default function Hero() {
             <div className="absolute bottom-0 left-0 h-28 w-40 bg-[radial-gradient(var(--color-brand-300)_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-70" />
           </div>
 
-          <img
-            src="/img/ilustraciones/hero-familia.svg"
-            alt={t.hero.imageAlt}
-            width="600"
-            height="528"
-            fetchPriority="high"
-            decoding="async"
-            className="relative aspect-[600/528] w-full rounded-[2rem] bg-brand-900 object-cover shadow-2xl shadow-brand-950/30 ring-4 ring-white sm:mt-6 sm:w-[94%]"
-          />
+          <picture>
+            <source
+              type="image/avif"
+              srcSet="/img/familia-640.avif 640w, /img/familia-960.avif 960w, /img/familia-1365.avif 1365w"
+              sizes={HERO_SIZES}
+            />
+            <source
+              type="image/webp"
+              srcSet="/img/familia-640.webp 640w, /img/familia-960.webp 960w, /img/familia-1365.webp 1365w"
+              sizes={HERO_SIZES}
+            />
+            <img
+              src="/img/familia-960.jpg"
+              alt={t.hero.imageAlt}
+              width="1365"
+              height="1024"
+              fetchPriority="high"
+              decoding="async"
+              className="relative aspect-[4/3] w-full rounded-[2rem] bg-slate-100 object-cover shadow-2xl shadow-brand-950/30 ring-4 ring-white sm:mt-6 sm:w-[94%]"
+            />
+          </picture>
 
           {/* Tarjeta: conversación por WhatsApp */}
           <div

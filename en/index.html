@@ -39,7 +39,14 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <!-- Preload hero image (LCP) -->
-    <link rel="preload" as="image" href="/img/ilustraciones/hero-familia.svg" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset="/img/familia-640.avif 640w, /img/familia-960.avif 960w, /img/familia-1365.avif 1365w"
+      imagesizes="(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 100vw"
+      fetchpriority="high"
+    />
 
     <script type="application/ld+json">
       {
