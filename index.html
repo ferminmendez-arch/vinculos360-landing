@@ -1,13 +1,79 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vinculos360</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Vínculos 360 | Electricidad, internet y servicios para tu hogar</title>
+    <meta
+      name="description"
+      content="Te ayudamos a comparar opciones de electricidad, internet y otros servicios esenciales para tu hogar. Atención personalizada y orientación sin compromiso por WhatsApp."
+    />
+    <link rel="canonical" href="https://www.vinculos360.com/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0b24a8" />
+
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-48.png" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph / redes sociales -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_US" />
+    <meta property="og:site_name" content="Vínculos 360" />
+    <meta property="og:url" content="https://www.vinculos360.com/" />
+    <meta property="og:title" content="Vínculos 360 | Los servicios esenciales de tu hogar, en un solo lugar" />
+    <meta
+      property="og:description"
+      content="Compara opciones de electricidad, internet y otros servicios para tu hogar con atención personalizada."
+    />
+    <meta property="og:image" content="https://www.vinculos360.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Vínculos 360: los servicios esenciales de tu hogar, en un solo lugar" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Precarga de la imagen principal (LCP) -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset="/img/familia-640.avif 640w, /img/familia-960.avif 960w, /img/familia-1338.avif 1338w"
+      imagesizes="(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 100vw"
+      fetchpriority="high"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Vínculos 360",
+        "url": "https://www.vinculos360.com/",
+        "logo": "https://www.vinculos360.com/logo-vinculos360.png",
+        "slogan": "Conectamos lo que te importa",
+        "telephone": "+1-281-825-7327",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+1-281-825-7327",
+          "contactType": "customer service",
+          "availableLanguage": ["Spanish"]
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div>
+        <h1>Vínculos 360</h1>
+        <p>Los servicios esenciales de tu hogar, en un solo lugar: electricidad, internet y otros servicios.</p>
+        <p>
+          Escríbenos por WhatsApp: <a href="https://wa.me/12818257327">(281) 825-7327</a> o llámanos al
+          <a href="tel:+12818257327">(281) 825-7327</a>.
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
