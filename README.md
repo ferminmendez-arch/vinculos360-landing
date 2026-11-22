@@ -61,3 +61,7 @@ return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
 ## Seguridad (Content-Security-Policy)
 
 `public/staticwebapp.config.json` solo permite scripts propios y conexiones a `script.google.com` / `script.googleusercontent.com`. Si se agrega Google Tag Manager, Meta Pixel u otro script externo, hay que añadir sus dominios a la CSP.
+
+## Agentes de captación de leads
+
+La carpeta `automation/` contiene tres agentes de bajo costo (contenido para Facebook, gestión de leads y analítica). No modifican el sitio ni el Apps Script de producción. Instrucciones de instalación, costos, seguridad y reversión: [`automation/README.md`](automation/README.md). Borradores de publicaciones: `marketing/posts/`.

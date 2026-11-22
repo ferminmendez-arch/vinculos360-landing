@@ -1,0 +1,129 @@
+{
+  "_comment": "Banco de temas verificados para el Agente de Contenido. Cada tema cita al menos una fuente oficial. Reglas: sin promesas de ahorro, sin precios, sin nombres de proveedores, sin 'gratis'. {{link}} se reemplaza por el enlace con UTM. Revisado el 2026-11-22.",
+  "topics": [
+    {
+      "id": "efl-que-es",
+      "pillar": "Entiende tu plan",
+      "title_es": "¿Qué es la Etiqueta de Datos de Electricidad (EFL)?",
+      "es": "⚡ Antes de firmar un plan de luz en Texas, pide la EFL (Electricity Facts Label).\n\nEs un documento corto que todo proveedor debe publicar para cada plan residencial. Ahí ves el precio promedio por kWh, el tipo de plan, la duración del contrato y los cargos.\n\nTip: la EFL te deja comparar planes \"manzana con manzana\".\n\n¿Quieres que te ayudemos a revisar tus opciones? Escríbenos 👉 {{link}}",
+      "en": "⚡ Before you sign up for an electricity plan in Texas, ask for the EFL (Electricity Facts Label).\n\nIt's a short document every provider must publish for each residential plan. It shows the average price per kWh, the plan type, the contract length and the fees.\n\nTip: the EFL lets you compare plans apples to apples.\n\nWant help reviewing your options? Message us 👉 {{link}}",
+      "sources": [
+        "https://www.puc.texas.gov/industry/electric/rates/facts/Default.aspx",
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    },
+    {
+      "id": "efl-500-1000-2000",
+      "pillar": "Entiende tu plan",
+      "title_es": "El precio cambia según cuánto consumes",
+      "es": "🔎 En la EFL vas a ver tres precios: para 500, 1,000 y 2,000 kWh al mes.\n\n¿Por qué? Porque algunos planes tienen cargos fijos o créditos que solo aplican en ciertos niveles de consumo. El precio que importa es el que se parece a tu consumo real.\n\nRevisa tu factura y busca cuántos kWh usaste en los últimos meses antes de comparar.\n\n¿Dudas? Te orientamos 👉 {{link}}",
+      "en": "🔎 Every EFL shows three prices: for 500, 1,000 and 2,000 kWh per month.\n\nWhy? Some plans have fixed charges or credits that only apply at certain usage levels. The price that matters is the one closest to your real usage.\n\nCheck your bill for how many kWh you used in recent months before comparing.\n\nQuestions? We can guide you 👉 {{link}}",
+      "sources": [
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    },
+    {
+      "id": "efl-tos-yrac",
+      "pillar": "Entiende tu plan",
+      "title_es": "Los 3 documentos de tu contrato de luz",
+      "es": "📄 Tu contrato de luz en Texas tiene tres documentos:\n\n1️⃣ EFL – el resumen del plan y sus precios.\n2️⃣ TOS – los Términos del Servicio.\n3️⃣ YRAC – \"Tus derechos como cliente\".\n\nEl proveedor debe dártelos al inscribirte y cuando los pidas, sin costo.\n\nGuárdalos: te sirven si tienes una duda o un problema con tu factura.\n\n¿Te ayudamos a entenderlos? 👉 {{link}}",
+      "en": "📄 Your Texas electricity contract has three documents:\n\n1️⃣ EFL – the plan summary and prices.\n2️⃣ TOS – the Terms of Service.\n3️⃣ YRAC – \"Your Rights as a Customer\".\n\nYour provider must give them to you when you enroll and whenever you ask, free of charge.\n\nKeep them: they help if you ever have a question or a billing issue.\n\nWant help understanding them? 👉 {{link}}",
+      "sources": [
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    },
+    {
+      "id": "areas-sin-opcion",
+      "pillar": "¿Puedo elegir?",
+      "title_es": "No en todo Texas se puede elegir proveedor",
+      "es": "🗺️ ¿Sabías que no en todo Texas puedes escoger tu compañía de luz?\n\nEn ciudades como Austin y San Antonio, la electricidad la da la empresa municipal. Lo mismo pasa en muchas zonas con cooperativas eléctricas y en otras áreas como El Paso.\n\nEn Houston, Dallas–Fort Worth y muchas otras zonas sí puedes elegir.\n\n¿No sabes si en tu ZIP hay opción? Pregúntanos 👉 {{link}}",
+      "en": "🗺️ Did you know you can't pick your electricity company everywhere in Texas?\n\nIn cities like Austin and San Antonio, power comes from the municipal utility. The same is true in many co-op areas and other places such as El Paso.\n\nIn Houston, Dallas–Fort Worth and many other areas, you can choose.\n\nNot sure about your ZIP code? Ask us 👉 {{link}}",
+      "sources": [
+        "https://puc.texas.gov/consumer/facts/faq/muni",
+        "https://www.ercot.com/files/docs/2025/11/17/ERCOT-Grid-Insights-Retail-Market.pdf"
+      ]
+    },
+    {
+      "id": "power-to-choose",
+      "pillar": "¿Puedo elegir?",
+      "title_es": "Power to Choose: el sitio oficial para comparar",
+      "es": "🏛️ La Comisión de Servicios Públicos de Texas (PUCT) tiene un sitio oficial para comparar planes de luz en zonas con opción: Power to Choose (powertochoose.org).\n\nAhí puedes ver los planes por ZIP y abrir la EFL de cada uno.\n\nSi te sientes perdido entre tantas opciones, te explicamos cómo leerlas en español 👉 {{link}}",
+      "en": "🏛️ The Public Utility Commission of Texas (PUCT) runs an official site to compare electricity plans in areas with choice: Power to Choose (powertochoose.org).\n\nYou can see plans by ZIP code and open each plan's EFL.\n\nFeeling lost with so many options? We'll walk you through them 👉 {{link}}",
+      "sources": [
+        "https://www.puc.texas.gov/consumer/electricity"
+      ]
+    },
+    {
+      "id": "proveedor-vs-distribuidora",
+      "pillar": "Entiende tu factura",
+      "title_es": "¿Quién te vende la luz y quién mantiene los cables?",
+      "es": "🔌 En las zonas de Texas con opción hay dos empresas en tu servicio:\n\n• Tu proveedor (REP): te vende la electricidad y te manda la factura.\n• La distribuidora de tu zona (por ejemplo, la que opera los postes y cables): entrega la luz a tu casa y atiende los apagones.\n\nPor eso, si cambias de proveedor, los cables y el medidor siguen siendo los mismos.\n\n¿Quieres revisar tus opciones? 👉 {{link}}",
+      "en": "🔌 In Texas areas with choice, two companies are involved in your service:\n\n• Your provider (REP): sells you the electricity and sends the bill.\n• Your area's delivery utility (the one that runs the poles and wires): delivers power to your home and handles outages.\n\nThat's why, if you switch providers, the wires and the meter stay the same.\n\nWant to review your options? 👉 {{link}}",
+      "sources": [
+        "https://www.ercot.com/files/docs/2025/11/17/ERCOT-Grid-Insights-Retail-Market.pdf"
+      ]
+    },
+    {
+      "id": "apagones-a-quien-llamar",
+      "pillar": "Entiende tu factura",
+      "title_es": "Se fue la luz: ¿a quién le reportas?",
+      "es": "🕯️ ¿Se fue la luz? En las zonas con opción, el apagón lo atiende la distribuidora de tu zona, no la compañía que te vende la luz.\n\nTip: busca hoy el número de reportes de apagones de tu distribuidora y guárdalo en tu celular. Lo vas a agradecer en la próxima tormenta.\n\n¿Tienes dudas sobre tu servicio? Escríbenos 👉 {{link}}",
+      "en": "🕯️ Power out? In Texas areas with choice, outages are handled by your area's delivery utility, not by the company that sells you electricity.\n\nTip: look up your delivery utility's outage number today and save it in your phone. You'll be glad you did during the next storm.\n\nQuestions about your service? Message us 👉 {{link}}",
+      "sources": [
+        "https://www.ercot.com/files/docs/2026/01/05/TXSETCC857.docx"
+      ]
+    },
+    {
+      "id": "slamming",
+      "pillar": "Protégete",
+      "title_es": "Nadie puede cambiarte de proveedor sin tu permiso",
+      "es": "🛑 En Texas, cambiar tu servicio de luz sin tu permiso se llama \"slamming\" y no está permitido.\n\nSi te cambiaron sin autorización, contacta primero a tu proveedor. Si no se resuelve, puedes acudir a la PUCT: 1-888-782-8477.\n\nNosotros solo te ayudamos a revisar opciones cuando tú nos lo pides. 👉 {{link}}",
+      "en": "🛑 In Texas, switching your electric service without your permission is called \"slamming\" and it isn't allowed.\n\nIf you were switched without authorization, contact your provider first. If it isn't resolved, you can reach the PUCT at 1-888-782-8477.\n\nWe only help you review options when you ask us to. 👉 {{link}}",
+      "sources": [
+        "https://www.puc.texas.gov/Complaints/Index",
+        "https://puc.texas.gov/consumer/facts/faq/electricity"
+      ]
+    },
+    {
+      "id": "tipo-de-plan",
+      "pillar": "Entiende tu plan",
+      "title_es": "¿Tu plan es fijo o variable?",
+      "es": "📊 La EFL te dice el tipo de plan. Antes de firmar, fíjate en esto:\n\n• ¿Es de precio fijo o puede cambiar mes a mes?\n• ¿Cuántos meses dura el contrato?\n• ¿Hay cargo por cancelar antes de tiempo?\n\nSon tres preguntas sencillas que evitan sorpresas en tu factura.\n\n¿Quieres que las revisemos contigo? 👉 {{link}}",
+      "en": "📊 The EFL tells you the plan type. Before you sign, check:\n\n• Is the price fixed, or can it change month to month?\n• How many months is the contract?\n• Is there a fee for cancelling early?\n\nThree simple questions that help avoid surprises on your bill.\n\nWant us to go over them with you? 👉 {{link}}",
+      "sources": [
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    },
+    {
+      "id": "fin-de-contrato",
+      "pillar": "Entiende tu plan",
+      "title_es": "¿Cuándo vence tu contrato de luz?",
+      "es": "📅 ¿Sabes cuándo vence tu contrato de luz?\n\nLa fecha y las condiciones de renovación están en tus documentos (EFL y TOS). Anótala en tu calendario: así tienes tiempo de comparar con calma antes de que llegue.\n\nSi no encuentras tus documentos, tu proveedor debe dártelos cuando los pidas.\n\n¿Te ayudamos a revisarlo? 👉 {{link}}",
+      "en": "📅 Do you know when your electricity contract ends?\n\nThe date and renewal terms are in your documents (EFL and TOS). Put it on your calendar so you have time to compare calmly before it arrives.\n\nCan't find your documents? Your provider must give them to you when you ask.\n\nWant help checking? 👉 {{link}}",
+      "sources": [
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    },
+    {
+      "id": "corredores-registrados",
+      "pillar": "Protégete",
+      "requires": ["puctBrokerRegistration"],
+      "title_es": "Los corredores de electricidad deben registrarse",
+      "es": "✅ En Texas, quien ofrece servicios de corretaje de electricidad debe estar registrado ante la PUCT.\n\nAntes de aceptar una oferta, pide el nombre de la empresa y revisa sus documentos del plan (EFL, TOS y YRAC).\n\nEn Vínculos 360 te explicamos cada paso 👉 {{link}}",
+      "en": "✅ In Texas, anyone providing electricity brokerage services must be registered with the PUCT.\n\nBefore accepting an offer, ask for the company name and review the plan documents (EFL, TOS and YRAC).\n\nAt Vínculos 360 we explain every step 👉 {{link}}",
+      "sources": [
+        "https://www.puc.texas.gov/industry/electric/business/brk/Default.aspx"
+      ]
+    },
+    {
+      "id": "lee-tu-factura",
+      "pillar": "Entiende tu factura",
+      "title_es": "3 datos de tu factura que necesitas para comparar",
+      "es": "🧾 Para comparar planes de luz necesitas tres datos de tu factura:\n\n1. Cuántos kWh usaste (idealmente, varios meses).\n2. Tu ZIP y dirección del servicio.\n3. La fecha en que vence tu contrato actual.\n\nCon eso ya puedes revisar opciones con calma.\n\nMándanos tus dudas por WhatsApp 👉 {{link}}",
+      "en": "🧾 To compare electricity plans you need three things from your bill:\n\n1. How many kWh you used (ideally several months).\n2. Your ZIP code and service address.\n3. When your current contract ends.\n\nWith that, you can review options calmly.\n\nSend us your questions on WhatsApp 👉 {{link}}",
+      "sources": [
+        "https://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.475/25.475x.pdf"
+      ]
+    }
+  ]
+}

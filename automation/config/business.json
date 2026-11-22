@@ -1,0 +1,45 @@
+{
+  "_comment": "Datos comerciales que usan los agentes. Todo lo marcado verified:false está BLOQUEADO para el contenido público hasta que el dueño lo confirme. No pongas aquí credenciales ni datos de clientes: este repositorio es público.",
+  "brand": "Vínculos 360",
+  "siteUrl": "https://www.vinculos360.com",
+  "whatsappNumber": "12818257327",
+  "facebookUrl": "https://www.facebook.com/vinculos360",
+  "timezone": "America/Chicago",
+
+  "goal": {
+    "qualifiedLeads": 10,
+    "days": 30,
+    "startDate": null,
+    "_note": "startDate (AAAA-MM-DD) lo define el dueño el día que arranca la campaña."
+  },
+
+  "budget": {
+    "capUsd": 50,
+    "warnAtFraction": 0.8,
+    "spendAuthorized": false,
+    "_note": "Los agentes nunca gastan dinero. El gasto lo registra el dueño en la pestaña Gastos; el agente de analítica solo avisa al 80 % y 100 % del tope."
+  },
+
+  "commercialFacts": {
+    "electricityProviders": { "verified": false, "value": [] },
+    "serviceIsFreeForCustomer": { "verified": false, "value": null },
+    "puctBrokerRegistration": { "verified": false, "value": null },
+    "serviceArea": { "verified": false, "value": "Texas (áreas con opción de proveedor)" },
+    "englishSupportOnWhatsApp": { "verified": false, "value": null }
+  },
+
+  "contentSchedule": {
+    "slots": [
+      { "weekday": 1, "time": "19:00" },
+      { "weekday": 3, "time": "12:30" },
+      { "weekday": 5, "time": "19:00" }
+    ],
+    "_note": "weekday: 1 = lunes … 7 = domingo. Hora local de Texas (America/Chicago)."
+  },
+
+  "utm": {
+    "source": "facebook",
+    "medium": "organic",
+    "campaign": "luz-texas"
+  }
+}

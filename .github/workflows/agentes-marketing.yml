@@ -1,0 +1,140 @@
+# Agentes de marketing de Vínculos 360 (Agente 1: contenido orgánico).
+# - Jueves: genera los borradores de la semana siguiente y abre un Pull Request.
+# - Pull Requests que tocan marketing/ o automation/: verificador de afirmaciones + pruebas.
+# - Al fusionar en main publicaciones con status "approved": las programa en Facebook
+#   SOLO si la variable META_PUBLISH_ENABLED = "true" y existen los secretos de Meta.
+#   Si no, hace una simulación y la muestra en el resumen.
+# No usa servicios de pago, no crea anuncios y no toca el despliegue del sitio.
+
+name: Agentes de marketing
+
+on:
+  schedule:
+    - cron: "23 13 * * 4" # jueves 13:23 UTC (7:23 a. m. CST / 8:23 a. m. CDT)
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Tarea"
+        type: choice
+        options:
+          - generar-borradores
+          - revisar-afirmaciones
+        default: generar-borradores
+  pull_request:
+    branches: [main]
+    paths:
+      - "marketing/**"
+      - "automation/**"
+      - "tests/automation-*.test.js"
+  push:
+    branches: [main]
+    paths:
+      - "marketing/posts/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agentes-marketing-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Verificar afirmaciones y pruebas de agentes
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.task == 'revisar-afirmaciones')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Los agentes no tienen dependencias: no hace falta npm ci.
+      - run: node automation/content/claims-lint.mjs
+      - run: node --test tests/automation-*.test.js
+
+  generar:
+    name: Generar borradores de la semana
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.task == 'generar-borradores')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generar borradores
+        id: gen
+        run: node automation/content/generate.mjs
+      - name: Verificar afirmaciones
+        run: node automation/content/claims-lint.mjs marketing/posts
+      - name: Abrir Pull Request para revisión
+        if: steps.gen.outputs.created != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEEK: ${{ steps.gen.outputs.week }}
+        run: |
+          set -euo pipefail
+          branch="contenido/${WEEK}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "La rama $branch ya existe; no se crea otra." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add marketing/posts
+          git commit -m "Borradores de Facebook para la semana ${WEEK}"
+          git push -u origin "$branch"
+          {
+            echo "Borradores generados por el Agente de Contenido para la semana **${WEEK}**."
+            echo
+            echo "Revisa \`marketing/posts/${WEEK}/CALENDARIO.md\`. Para publicar una pieza, cambia \`status: \"draft\"\` por \`status: \"approved\"\` y fusiona este PR."
+            echo
+            echo "Nada se publica sin tu aprobación. Si la publicación automática no está activada, copia la sección **Publicar** a Facebook a mano."
+          } > /tmp/pr-body.md
+          gh pr create --base main --head "$branch" --title "Contenido de Facebook — semana ${WEEK}" --body-file /tmp/pr-body.md
+      - name: Avisar falla
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash automation/scripts/alert-issue.sh "Generar borradores" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  publicar:
+    name: Programar publicaciones aprobadas
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: facebook
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Programar en Facebook (o simular)
+        env:
+          META_PUBLISH_ENABLED: ${{ vars.META_PUBLISH_ENABLED }}
+          META_PAGE_ID: ${{ secrets.META_PAGE_ID }}
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'marketing/posts/*.md' | grep -v 'CALENDARIO.md' || true)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No hay publicaciones nuevas o modificadas." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node automation/content/publish-meta.mjs --previous-ref HEAD~1 "${files[@]}"
+      - name: Avisar falla
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash automation/scripts/alert-issue.sh "Programar publicaciones" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
