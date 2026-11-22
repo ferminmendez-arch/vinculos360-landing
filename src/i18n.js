@@ -35,7 +35,9 @@ const es = {
     text: "Te ayudamos a comparar opciones de electricidad, internet, seguridad y otros servicios esenciales para encontrar lo que mejor se adapte a las necesidades de tu hogar.",
     primary: "Ver mis opciones",
     whatsapp: "Hablar por WhatsApp",
-    imageAlt: "Familia sonriente revisando la factura de luz de su hogar",
+    imageAlt: "Ilustración de un hogar moderno conectado a electricidad, internet, seguridad y otros servicios",
+    chatStatus: "En línea",
+    chatMessage: "¡Hola! Te ayudamos a comparar tus opciones.",
   },
   benefits: ["Atención personalizada", "Orientación sin compromiso", "Proceso rápido y sencillo"],
 
@@ -188,7 +190,9 @@ const en = {
     text: "We help you compare electricity, internet, security and other essential service options to find what best fits your home's needs.",
     primary: "See my options",
     whatsapp: "Chat on WhatsApp",
-    imageAlt: "Smiling family reviewing their home electricity bill",
+    imageAlt: "Illustration of a modern home connected to electricity, internet, security and other services",
+    chatStatus: "Online",
+    chatMessage: "Hi! We'll help you compare your options.",
   },
   benefits: ["Personalized attention", "No-obligation guidance", "Quick and simple process"],
 

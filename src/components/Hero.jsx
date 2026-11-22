@@ -1,8 +1,6 @@
-import { ArrowRight, CircleCheck } from "lucide-react";
+import { ArrowRight, CircleCheck, MessageCircle } from "lucide-react";
 import { useStrings } from "../i18n.js";
 import { WhatsAppLink } from "./ui.jsx";
-
-const HERO_SIZES = "(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 100vw";
 
 export default function Hero() {
   const t = useStrings();
@@ -52,32 +50,41 @@ export default function Hero() {
           </ul>
         </div>
 
-        <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+        <div className="relative mx-auto w-full max-w-xl pt-6 pb-16 sm:px-6 sm:pb-10 lg:max-w-none lg:pr-0">
+          {/* Fondo decorativo */}
+          <div aria-hidden="true" className="absolute inset-0 -z-10">
+            <div className="absolute top-0 right-0 bottom-4 left-10 rounded-[2.5rem] bg-gradient-to-br from-brand-600 to-brand-900 sm:left-16" />
+            <div className="absolute -top-2 right-6 h-24 w-24 rounded-full bg-accent-500 opacity-90 blur-[1px] sm:h-28 sm:w-28" />
+            <div className="absolute bottom-0 left-0 h-28 w-40 bg-[radial-gradient(var(--color-brand-300)_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-70" />
+          </div>
+
+          <img
+            src="/img/ilustraciones/hero-hogar.svg"
+            alt={t.hero.imageAlt}
+            width="600"
+            height="528"
+            fetchPriority="high"
+            decoding="async"
+            className="relative aspect-[600/528] w-full rounded-[2rem] bg-brand-900 object-cover shadow-2xl shadow-brand-950/30 ring-4 ring-white sm:mt-6 sm:w-[94%]"
+          />
+
+          {/* Tarjeta: conversación por WhatsApp */}
           <div
             aria-hidden="true"
-            className="absolute -inset-3 -z-10 rotate-2 rounded-[2.25rem] bg-gradient-to-br from-brand-600 via-brand-700 to-accent-500 opacity-90 sm:-inset-4"
-          />
-          <picture>
-            <source
-              type="image/avif"
-              srcSet="/img/familia-640.avif 640w, /img/familia-960.avif 960w, /img/familia-1338.avif 1338w"
-              sizes={HERO_SIZES}
-            />
-            <source
-              type="image/webp"
-              srcSet="/img/familia-640.webp 640w, /img/familia-960.webp 960w, /img/familia-1338.webp 1338w"
-              sizes={HERO_SIZES}
-            />
-            <img
-              src="/img/familia-960.jpg"
-              alt={t.hero.imageAlt}
-              width="1338"
-              height="1176"
-              fetchPriority="high"
-              decoding="async"
-              className="aspect-[1338/1176] w-full rounded-[2rem] bg-slate-100 object-cover shadow-2xl shadow-brand-900/20"
-            />
-          </picture>
+            className="animate-float-soft absolute bottom-0 left-2 flex max-w-[16.5rem] items-start gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-xl shadow-brand-950/15 backdrop-blur sm:-left-2 sm:bottom-2 sm:max-w-[17rem] sm:p-4"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wa-600 text-white">
+              <MessageCircle className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                Vínculos 360
+                <span className="h-1.5 w-1.5 rounded-full bg-wa-500" />
+                <span className="font-medium text-slate-500">{t.hero.chatStatus}</span>
+              </span>
+              <span className="mt-1 block text-sm leading-snug text-slate-700">{t.hero.chatMessage}</span>
+            </span>
+          </div>
         </div>
       </div>
     </section>

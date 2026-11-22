@@ -1,31 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Casa conectada a internet</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Internet para el hogar</title>
 <defs>
-<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#dfe5ff"/></linearGradient>
-<linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3550d6"/><stop offset="1" stop-color="#0b24a8"/></linearGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f6bf0"/><stop offset=".55" stop-color="#1b37c0"/><stop offset="1" stop-color="#0a1f87"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#7dd3fc" stop-opacity=".7"/><stop offset="1" stop-color="#7dd3fc" stop-opacity="0"/></radialGradient>
+<linearGradient id="arc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7dd3fc"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient>
+<linearGradient id="router" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c2ccfb"/></linearGradient>
+<linearGradient id="routerSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#94a5f5"/><stop offset="1" stop-color="#5f75ea"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient>
+<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#fff" stroke-opacity=".08"/></pattern>
+<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#07113d" flood-opacity=".45"/></filter>
+<filter id="neon" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
-<rect width="480" height="300" rx="28" fill="url(#bg)"/>
-<circle cx="80" cy="56" r="80" fill="#fff" opacity=".5"/>
-<!-- ondas wifi -->
-<g fill="none" stroke-linecap="round">
-<path d="M170 92 a110 110 0 0 1 140 0" stroke="#94a5f5" stroke-width="12"/>
-<path d="M192 120 a76 76 0 0 1 96 0" stroke="#5f75ea" stroke-width="12"/>
-<path d="M214 148 a42 42 0 0 1 52 0" stroke="#1b37c0" stroke-width="12"/>
+<rect width="480" height="300" fill="url(#bg)"/>
+<rect width="480" height="300" fill="url(#grid)"/>
+<circle cx="240" cy="150" r="140" fill="url(#glow)"/>
+<g fill="none" stroke-linecap="round" filter="url(#neon)">
+<path d="M150 118a128 128 0 0 1 180 0" stroke="url(#arc)" stroke-width="13" opacity=".55"/>
+<path d="M176 146a92 92 0 0 1 128 0" stroke="url(#arc)" stroke-width="13" opacity=".8"/>
+<path d="M202 174a56 56 0 0 1 76 0" stroke="#fff" stroke-width="13"/>
 </g>
-<circle cx="240" cy="172" r="10" fill="#f86000"/>
-<ellipse cx="240" cy="264" rx="190" ry="14" fill="#0b24a8" opacity=".1"/>
-<!-- router -->
-<rect x="190" y="206" width="100" height="40" rx="12" fill="#0a1f87"/>
-<rect x="206" y="186" width="6" height="24" rx="3" fill="#0a1f87"/><rect x="268" y="186" width="6" height="24" rx="3" fill="#0a1f87"/>
-<circle cx="214" cy="226" r="5" fill="#25d366"/><circle cx="232" cy="226" r="5" fill="#25d366"/><circle cx="250" cy="226" r="5" fill="#ff8a3d"/>
-<!-- laptop -->
-<rect x="44" y="150" width="112" height="76" rx="8" fill="url(#scr)"/>
-<rect x="54" y="160" width="92" height="56" rx="4" fill="#c2ccfb"/>
-<rect x="62" y="170" width="44" height="8" rx="4" fill="#fff"/><rect x="62" y="184" width="70" height="6" rx="3" fill="#fff" opacity=".8"/><rect x="62" y="196" width="56" height="6" rx="3" fill="#fff" opacity=".8"/>
-<path d="M30 230 h140 l-10 18 h-120 z" fill="#5f75ea"/>
-<!-- teléfono -->
-<rect x="336" y="136" width="64" height="116" rx="14" fill="#0b24a8"/>
-<rect x="344" y="150" width="48" height="84" rx="6" fill="#fff"/>
-<path d="M356 196 a20 20 0 0 1 24 0" stroke="#3550d6" stroke-width="5" fill="none" stroke-linecap="round"/>
-<path d="M362 206 a10 10 0 0 1 12 0" stroke="#3550d6" stroke-width="5" fill="none" stroke-linecap="round"/>
-<circle cx="368" cy="216" r="3.5" fill="#f86000"/>
+<circle cx="240" cy="196" r="10" fill="#ff8a3d" filter="url(#neon)"/>
+<!-- router 3D -->
+<g filter="url(#sh)">
+<rect x="212" y="204" width="6" height="26" rx="3" fill="#dfe5ff"/><rect x="262" y="204" width="6" height="26" rx="3" fill="#dfe5ff"/>
+<path d="M170 234h140l12 26h-164z" fill="url(#router)"/>
+<path d="M158 260h164v12a6 6 0 0 1-6 6h-152a6 6 0 0 1-6-6z" fill="url(#routerSide)"/>
+<circle cx="200" cy="268" r="4" fill="#25d366"/><circle cx="214" cy="268" r="4" fill="#25d366"/><circle cx="228" cy="268" r="4" fill="#ff8a3d"/>
+</g>
+<!-- tarjeta velocidad -->
+<g filter="url(#sh)">
+<rect x="26" y="40" width="124" height="96" rx="20" fill="url(#card)" stroke="#fff" stroke-opacity=".5"/>
+<path d="M52 112a36 36 0 0 1 72 0" stroke="#fff" stroke-opacity=".3" stroke-width="10" fill="none" stroke-linecap="round"/>
+<path d="M52 112a36 36 0 0 1 60 -26" stroke="#7dd3fc" stroke-width="10" fill="none" stroke-linecap="round"/>
+<path d="M88 112l18 -22" stroke="#fff" stroke-width="5" stroke-linecap="round"/><circle cx="88" cy="112" r="6" fill="#fff"/>
+</g>
+<!-- tarjeta dispositivos -->
+<g filter="url(#sh)">
+<rect x="336" y="56" width="122" height="104" rx="20" fill="url(#card)" stroke="#fff" stroke-opacity=".5"/>
+<rect x="352" y="76" width="58" height="40" rx="6" fill="#fff"/><path d="M346 120h70l-4 8h-62z" fill="#dfe5ff"/>
+<rect x="420" y="80" width="24" height="44" rx="6" fill="#fff"/><rect x="424" y="86" width="16" height="30" rx="2" fill="#7dd3fc"/>
+<rect x="352" y="140" width="64" height="8" rx="4" fill="#fff" opacity=".7"/>
+</g>
+<g fill="#fff"><path d="M100 196l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" opacity=".85"/><path d="M412 214l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" opacity=".9"/></g>
 </svg>
