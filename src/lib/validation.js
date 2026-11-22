@@ -24,35 +24,36 @@ export function cleanName(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
-/* Devuelve { field: mensaje } con los errores encontrados. */
+/* Devuelve { campo: código } con los errores encontrados.
+   Los códigos se traducen con STRINGS[lang].errors. */
 export function validateLead({ service, name, phone, zipCode }) {
   const errors = {};
 
   if (!SERVICE_VALUES.includes(service)) {
-    errors.service = "Selecciona el servicio que deseas revisar.";
+    errors.service = "service_required";
   }
 
   const n = cleanName(name);
   if (!n) {
-    errors.name = "Ingresa tu nombre.";
+    errors.name = "name_required";
   } else if (n.length < 2 || !/\p{L}/u.test(n)) {
-    errors.name = "Ingresa un nombre válido.";
+    errors.name = "name_invalid";
   } else if (n.length > 80) {
-    errors.name = "El nombre es demasiado largo.";
+    errors.name = "name_long";
   }
 
   const p = normalizeUsPhone(phone);
   if (!p) {
-    errors.phone = "Ingresa tu número de teléfono.";
+    errors.phone = "phone_required";
   } else if (p.length !== 10 || /^[01]/.test(p)) {
-    errors.phone = "Ingresa un teléfono válido de 10 dígitos.";
+    errors.phone = "phone_invalid";
   }
 
   const z = digitsOnly(zipCode);
   if (!z) {
-    errors.zipCode = "Ingresa tu ZIP Code.";
+    errors.zipCode = "zip_required";
   } else if (z.length !== 5) {
-    errors.zipCode = "Ingresa un ZIP Code válido de 5 dígitos.";
+    errors.zipCode = "zip_invalid";
   }
 
   return errors;

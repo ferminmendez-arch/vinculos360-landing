@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Menu, Phone, X } from "lucide-react";
-import { NAV_LINKS } from "../content.js";
+import { SECTION_IDS } from "../content.js";
 import { PHONE_DISPLAY, PHONE_E164 } from "../config.js";
-import { Logo, WhatsAppLink } from "./ui.jsx";
+import { useStrings } from "../i18n.js";
+import { LanguageSwitch, Logo, WhatsAppLink } from "./ui.jsx";
 
 export default function Header() {
+  const t = useStrings();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -18,27 +20,27 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <a href="#inicio" className="flex shrink-0 items-center rounded-lg" aria-label="Vínculos 360 — Inicio">
-          <Logo />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-6 lg:px-8">
+        <a href="#inicio" className="flex shrink-0 items-center rounded-lg" aria-label={t.homeLabel}>
+          <Logo className="h-8 w-auto sm:h-10" />
         </a>
 
-        <nav aria-label="Principal" className="hidden lg:block">
+        <nav aria-label={t.navLabel} className="hidden lg:block">
           <ul className="flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
+            {SECTION_IDS.map((id) => (
+              <li key={id}>
                 <a
-                  href={link.href}
-                  className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                  href={`#${id}`}
+                  className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-700"
                 >
-                  {link.label}
+                  {t.nav[id]}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <a
             href={`tel:${PHONE_E164}`}
             className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:text-brand-700 xl:inline-flex"
@@ -47,8 +49,10 @@ export default function Header() {
             {PHONE_DISPLAY}
           </a>
 
-          <WhatsAppLink className="px-4 py-2.5 text-sm sm:px-5">
-            <span className="hidden sm:inline">Escríbenos por </span>WhatsApp
+          <LanguageSwitch />
+
+          <WhatsAppLink className="min-h-11 px-3.5 py-2.5 text-sm sm:px-5">
+            <span className="hidden sm:inline">{t.whatsappPrefix}</span>WhatsApp
           </WhatsAppLink>
 
           <button
@@ -59,25 +63,25 @@ export default function Header() {
             onClick={() => setOpen((value) => !value)}
           >
             {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-            <span className="sr-only">{open ? "Cerrar menú" : "Abrir menú"}</span>
+            <span className="sr-only">{open ? t.closeMenu : t.openMenu}</span>
           </button>
         </div>
       </div>
 
       <nav
         id="menu-movil"
-        aria-label="Menú móvil"
+        aria-label={t.mobileNavLabel}
         className={`border-t border-slate-200 bg-white lg:hidden ${open ? "block" : "hidden"}`}
       >
         <ul className="mx-auto max-w-7xl space-y-1 px-4 py-3 sm:px-6">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href}>
+          {SECTION_IDS.map((id) => (
+            <li key={id}>
               <a
-                href={link.href}
+                href={`#${id}`}
                 onClick={() => setOpen(false)}
                 className="block rounded-xl px-4 py-3 text-base font-medium text-slate-800 hover:bg-brand-50 hover:text-brand-700"
               >
-                {link.label}
+                {t.nav[id]}
               </a>
             </li>
           ))}
@@ -88,7 +92,7 @@ export default function Header() {
               className="flex items-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-brand-700 hover:bg-brand-50"
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
-              Llamar al {PHONE_DISPLAY}
+              {t.callUs(PHONE_DISPLAY)}
             </a>
           </li>
         </ul>

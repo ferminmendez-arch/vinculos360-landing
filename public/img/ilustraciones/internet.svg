@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Casa conectada a internet</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#dfe5ff"/></linearGradient>
+<linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3550d6"/><stop offset="1" stop-color="#0b24a8"/></linearGradient>
+</defs>
+<rect width="480" height="300" rx="28" fill="url(#bg)"/>
+<circle cx="80" cy="56" r="80" fill="#fff" opacity=".5"/>
+<!-- ondas wifi -->
+<g fill="none" stroke-linecap="round">
+<path d="M170 92 a110 110 0 0 1 140 0" stroke="#94a5f5" stroke-width="12"/>
+<path d="M192 120 a76 76 0 0 1 96 0" stroke="#5f75ea" stroke-width="12"/>
+<path d="M214 148 a42 42 0 0 1 52 0" stroke="#1b37c0" stroke-width="12"/>
+</g>
+<circle cx="240" cy="172" r="10" fill="#f86000"/>
+<ellipse cx="240" cy="264" rx="190" ry="14" fill="#0b24a8" opacity=".1"/>
+<!-- router -->
+<rect x="190" y="206" width="100" height="40" rx="12" fill="#0a1f87"/>
+<rect x="206" y="186" width="6" height="24" rx="3" fill="#0a1f87"/><rect x="268" y="186" width="6" height="24" rx="3" fill="#0a1f87"/>
+<circle cx="214" cy="226" r="5" fill="#25d366"/><circle cx="232" cy="226" r="5" fill="#25d366"/><circle cx="250" cy="226" r="5" fill="#ff8a3d"/>
+<!-- laptop -->
+<rect x="44" y="150" width="112" height="76" rx="8" fill="url(#scr)"/>
+<rect x="54" y="160" width="92" height="56" rx="4" fill="#c2ccfb"/>
+<rect x="62" y="170" width="44" height="8" rx="4" fill="#fff"/><rect x="62" y="184" width="70" height="6" rx="3" fill="#fff" opacity=".8"/><rect x="62" y="196" width="56" height="6" rx="3" fill="#fff" opacity=".8"/>
+<path d="M30 230 h140 l-10 18 h-120 z" fill="#5f75ea"/>
+<!-- teléfono -->
+<rect x="336" y="136" width="64" height="116" rx="14" fill="#0b24a8"/>
+<rect x="344" y="150" width="48" height="84" rx="6" fill="#fff"/>
+<path d="M356 196 a20 20 0 0 1 24 0" stroke="#3550d6" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M362 206 a10 10 0 0 1 12 0" stroke="#3550d6" stroke-width="5" fill="none" stroke-linecap="round"/>
+<circle cx="368" cy="216" r="3.5" fill="#f86000"/>
+</svg>

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle, MessageCircle, Phone, RotateCw } from "lucide-react";
-import { MINI_BENEFITS, SERVICES } from "../content.js";
+import { SERVICES } from "../content.js";
+import { useLang, useStrings } from "../i18n.js";
 import { PHONE_DISPLAY, PHONE_E164 } from "../config.js";
 import { getTrackingData } from "../lib/tracking.js";
 import { buildLeadWhatsAppMessage, buildWhatsAppUrl } from "../lib/whatsapp.js";
@@ -53,6 +54,9 @@ function FieldError({ id, message }) {
 }
 
 export default function ContactSection({ selectedService, onSelectService }) {
+  const t = useStrings();
+  const lang = useLang();
+  const c = t.contact;
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("idle");
@@ -100,7 +104,8 @@ export default function ContactSection({ selectedService, onSelectService }) {
       service: selectedService,
       ...getTrackingData(),
     };
-    const url = buildWhatsAppUrl(buildLeadWhatsAppMessage({ name, service: selectedService, zipCode }));
+    const serviceLabel = t.services.items[SERVICES.find((s) => s.value === selectedService).slug].title;
+    const url = buildWhatsAppUrl(buildLeadWhatsAppMessage({ name, service: serviceLabel, zipCode }, lang));
     setWhatsappUrl(url);
 
     // La misma solicitud ya se registró hace poco: no se duplica.
@@ -114,7 +119,7 @@ export default function ContactSection({ selectedService, onSelectService }) {
     setStatus("submitting");
     const result = await sendLead(payload);
     submittingRef.current = false;
-    trackEvent(`lead_${result.status}`, { service: selectedService });
+    trackEvent(`lead_${result.status}`, { service: selectedService, language: lang });
 
     if (result.status === "confirmed") {
       rememberConfirmed(payload);
@@ -142,17 +147,17 @@ export default function ContactSection({ selectedService, onSelectService }) {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:items-start lg:gap-12 lg:px-8">
         <div className="lg:sticky lg:top-28">
           <p className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.16em] text-brand-100 uppercase">
-            Contacto
+            {c.eyebrow}
           </p>
           <h2 id="contacto-title" className="mt-4 text-3xl font-extrabold tracking-tight text-balance text-white sm:text-4xl">
-            Cuéntanos qué servicio necesitas
+            {c.title}
           </h2>
           <p className="mt-4 max-w-xl text-lg leading-8 text-slate-300">
-            Completa tus datos y continuaremos la conversación por WhatsApp.
+            {c.text}
           </p>
 
           <ul className="mt-8 space-y-3">
-            {MINI_BENEFITS.map((item) => (
+            {t.benefits.map((item) => (
               <li key={item} className="flex items-center gap-3 text-base font-medium text-slate-100">
                 <CircleCheck className="h-5 w-5 shrink-0 text-wa-500" aria-hidden="true" />
                 {item}
@@ -169,18 +174,28 @@ export default function ContactSection({ selectedService, onSelectService }) {
               {PHONE_DISPLAY}
             </a>
             <WhatsAppLink variant="light" className="px-6 py-3.5">
-              Escríbenos por WhatsApp
+              {c.whatsapp}
             </WhatsAppLink>
           </div>
+
+          <img
+            src="/img/ilustraciones/asesoria.svg"
+            alt=""
+            width="480"
+            height="320"
+            loading="lazy"
+            decoding="async"
+            className="mt-10 hidden w-full max-w-md lg:block"
+          />
         </div>
 
         <div className="rounded-[2rem] bg-white p-6 shadow-2xl shadow-black/30 sm:p-8">
           {status === "confirmed" ? (
             <div role="status" className="py-6 text-center">
               <CircleCheck className="mx-auto h-14 w-14 text-wa-600" aria-hidden="true" />
-              <h3 className="mt-4 text-2xl font-bold text-slate-900">¡Recibimos tu solicitud!</h3>
+              <h3 className="mt-4 text-2xl font-bold text-slate-900">{c.successTitle}</h3>
               <p className="mt-3 text-base leading-7 text-slate-600">
-                Te estamos llevando a WhatsApp para continuar la conversación.
+                {c.successText}
               </p>
               {whatsappUrl && (
                 <a
@@ -188,7 +203,7 @@ export default function ContactSection({ selectedService, onSelectService }) {
                   className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-wa-600 px-6 py-3.5 font-semibold text-white hover:bg-wa-700"
                 >
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                  Abrir WhatsApp
+                  {c.openWhatsapp}
                 </a>
               )}
               <button
@@ -196,17 +211,17 @@ export default function ContactSection({ selectedService, onSelectService }) {
                 onClick={resetForm}
                 className="mt-4 block w-full text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
               >
-                Enviar otra solicitud
+                {c.another}
               </button>
             </div>
           ) : (
             <form noValidate onSubmit={handleSubmit} aria-describedby="form-nota" className="space-y-5">
               <fieldset>
                 <legend className="mb-3 block text-sm font-semibold text-slate-800">
-                  ¿Qué servicio deseas revisar?
+                  {c.serviceLegend}
                 </legend>
                 <div
-                  className="grid gap-2 sm:grid-cols-3"
+                  className="grid grid-cols-2 gap-2"
                   aria-describedby={errors.service ? "service-error" : undefined}
                 >
                   {SERVICES.map((service) => {
@@ -236,17 +251,17 @@ export default function ContactSection({ selectedService, onSelectService }) {
                           className="sr-only"
                         />
                         {checked && <CircleCheck className="h-4 w-4 shrink-0" aria-hidden="true" />}
-                        {service.title}
+                        {t.services.items[service.slug].title}
                       </label>
                     );
                   })}
                 </div>
-                <FieldError id="service-error" message={errors.service} />
+                <FieldError id="service-error" message={t.errors[errors.service]} />
               </fieldset>
 
               <div>
                 <label htmlFor="name" className="mb-2 block text-sm font-semibold text-slate-800">
-                  Nombre
+                  {c.name}
                 </label>
                 <input
                   id="name"
@@ -255,20 +270,20 @@ export default function ContactSection({ selectedService, onSelectService }) {
                   autoComplete="name"
                   autoCapitalize="words"
                   maxLength={80}
-                  placeholder="Tu nombre"
+                  placeholder={c.namePlaceholder}
                   value={form.name}
                   onChange={(e) => update("name", e.target.value)}
                   aria-invalid={Boolean(errors.name)}
                   aria-describedby={errors.name ? "name-error" : undefined}
                   className={inputClass(errors.name)}
                 />
-                <FieldError id="name-error" message={errors.name} />
+                <FieldError id="name-error" message={t.errors[errors.name]} />
               </div>
 
               <div className="grid gap-5 sm:grid-cols-[1.4fr_1fr]">
                 <div>
                   <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-slate-800">
-                    Teléfono
+                    {c.phone}
                   </label>
                   <input
                     id="phone"
@@ -283,12 +298,12 @@ export default function ContactSection({ selectedService, onSelectService }) {
                     aria-describedby={errors.phone ? "phone-error" : undefined}
                     className={inputClass(errors.phone)}
                   />
-                  <FieldError id="phone-error" message={errors.phone} />
+                  <FieldError id="phone-error" message={t.errors[errors.phone]} />
                 </div>
 
                 <div>
                   <label htmlFor="zipCode" className="mb-2 block text-sm font-semibold text-slate-800">
-                    ZIP Code
+                    {c.zip}
                   </label>
                   <input
                     id="zipCode"
@@ -304,13 +319,13 @@ export default function ContactSection({ selectedService, onSelectService }) {
                     aria-describedby={errors.zipCode ? "zipCode-error" : undefined}
                     className={inputClass(errors.zipCode)}
                   />
-                  <FieldError id="zipCode-error" message={errors.zipCode} />
+                  <FieldError id="zipCode-error" message={t.errors[errors.zipCode]} />
                 </div>
               </div>
 
               {/* Campo trampa anti-spam: oculto para personas */}
               <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
-                <label htmlFor="company">Empresa</label>
+                <label htmlFor="company">{c.honeypot}</label>
                 <input
                   id="company"
                   name="company"
@@ -327,21 +342,17 @@ export default function ContactSection({ selectedService, onSelectService }) {
                   <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                     <p className="font-semibold">
                       {status === "offline"
-                        ? "Parece que no tienes conexión a internet."
-                        : "No pudimos registrar tu solicitud en este momento."}
+                        ? c.offlineTitle
+                        : c.rejectedTitle}
                     </p>
-                    <p className="mt-1 leading-6">
-                      Tus datos siguen aquí. Intenta de nuevo o envíanos tu solicitud directamente por
-                      WhatsApp. Si no se envía ahora, la reintentaremos automáticamente la próxima vez que
-                      visites el sitio desde este dispositivo.
-                    </p>
+                    <p className="mt-1 leading-6">{c.failedText}</p>
                     {whatsappUrl && (
                       <a
                         href={whatsappUrl}
                         className="mt-3 inline-flex items-center gap-2 font-semibold text-wa-700 underline underline-offset-4"
                       >
                         <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                        Enviar mi solicitud por WhatsApp
+                        {c.sendByWhatsapp}
                       </a>
                     )}
                   </div>
@@ -349,18 +360,15 @@ export default function ContactSection({ selectedService, onSelectService }) {
 
                 {status === "unverified" && (
                   <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-semibold">Enviamos tus datos, pero no pudimos confirmar que se registraron.</p>
-                    <p className="mt-1 leading-6">
-                      Para asegurarnos de atenderte, continúa por WhatsApp: tu nombre, servicio y ZIP Code van
-                      incluidos en el mensaje.
-                    </p>
+                    <p className="font-semibold">{c.unverifiedTitle}</p>
+                    <p className="mt-1 leading-6">{c.unverifiedText}</p>
                     {whatsappUrl && (
                       <a
                         href={whatsappUrl}
                         className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-wa-600 px-5 py-3 text-base font-semibold text-white hover:bg-wa-700"
                       >
                         <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                        Continuar por WhatsApp
+                        {c.submit}
                       </a>
                     )}
                   </div>
@@ -376,16 +384,16 @@ export default function ContactSection({ selectedService, onSelectService }) {
                   {isSubmitting ? (
                     <>
                       <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                      Enviando tu solicitud…
+                      {c.sending}
                     </>
                   ) : status === "rejected" || status === "offline" ? (
                     <>
                       <RotateCw className="h-5 w-5" aria-hidden="true" />
-                      Intentar de nuevo
+                      {c.retry}
                     </>
                   ) : (
                     <>
-                      Continuar por WhatsApp
+                      {c.submit}
                       <MessageCircle className="h-5 w-5" aria-hidden="true" />
                     </>
                   )}
@@ -393,8 +401,7 @@ export default function ContactSection({ selectedService, onSelectService }) {
               )}
 
               <p id="form-nota" className="text-center text-xs leading-5 text-slate-500">
-                Al continuar, utilizaremos esta información para atender tu solicitud y continuar la
-                conversación contigo.
+                {c.privacy}
               </p>
             </form>
           )}

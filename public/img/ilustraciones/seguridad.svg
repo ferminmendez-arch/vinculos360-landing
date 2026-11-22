@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Cámaras de seguridad y monitoreo del hogar</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6e9f7"/><stop offset="1" stop-color="#c2ccfb"/></linearGradient>
+<linearGradient id="cone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d" stop-opacity=".45"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></linearGradient>
+<linearGradient id="ph" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c1c66"/><stop offset="1" stop-color="#07113d"/></linearGradient>
+</defs>
+<rect width="480" height="300" rx="28" fill="url(#bg)"/>
+<circle cx="70" cy="250" r="90" fill="#fff" opacity=".35"/>
+<ellipse cx="200" cy="264" rx="170" ry="13" fill="#0b24a8" opacity=".12"/>
+<!-- casa -->
+<path d="M70 150 l110 -82 l110 82 v104 a8 8 0 0 1 -8 8 h-204 a8 8 0 0 1 -8 -8 z" fill="#fff"/>
+<path d="M56 158 l124 -94 l124 94" stroke="#0b24a8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<rect x="100" y="180" width="50" height="42" rx="6" fill="#c2ccfb"/><path d="M125 180v42M100 201h50" stroke="#fff" stroke-width="4"/>
+<rect x="196" y="190" width="46" height="72" rx="6" fill="#1b37c0"/><circle cx="232" cy="228" r="4" fill="#ffd27a"/>
+<!-- cono de visión -->
+<path d="M252 170 L110 256 L320 256 Z" fill="url(#cone)"/>
+<!-- cámara -->
+<rect x="282" y="146" width="16" height="30" rx="4" fill="#0a1f87"/>
+<g transform="translate(-16 40) rotate(28 270 122)"><rect x="236" y="106" width="70" height="32" rx="12" fill="#0a1f87"/><circle cx="244" cy="122" r="11" fill="#07113d"/><circle cx="244" cy="122" r="5" fill="#5f75ea"/><circle cx="292" cy="114" r="3.5" fill="#f86000"/></g>
+<!-- teléfono con vista en vivo -->
+<rect x="350" y="70" width="96" height="184" rx="18" fill="url(#ph)"/>
+<rect x="360" y="88" width="76" height="140" rx="8" fill="#dfe5ff"/>
+<path d="M368 148 l30 -24 l30 24 v40 h-60 z" fill="#fff"/><rect x="390" y="162" width="16" height="26" rx="2" fill="#1b37c0"/>
+<rect x="366" y="96" width="34" height="14" rx="7" fill="#f86000"/><circle cx="374" cy="103" r="3" fill="#fff"/><rect x="380" y="100" width="14" height="6" rx="3" fill="#fff"/>
+<rect x="366" y="200" width="64" height="8" rx="4" fill="#94a5f5"/><rect x="366" y="212" width="40" height="8" rx="4" fill="#94a5f5"/>
+<!-- escudo -->
+<g transform="translate(318 186)"><path d="M28 0 l26 10 v20 c0 18 -12 31 -26 38 c-14 -7 -26 -20 -26 -38 v-20 z" fill="#15803d" stroke="#fff" stroke-width="4"/><path d="M17 33 l8 8 l14 -16" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

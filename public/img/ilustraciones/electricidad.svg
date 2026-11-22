@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Casa con foco encendido</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4ec"/><stop offset="1" stop-color="#ffe5d1"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb070" stop-opacity=".75"/><stop offset="1" stop-color="#ffb070" stop-opacity="0"/></radialGradient>
+<linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b37c0"/><stop offset="1" stop-color="#0b24a8"/></linearGradient>
+<linearGradient id="bulb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient>
+</defs>
+<rect width="480" height="300" rx="28" fill="url(#bg)"/>
+<circle cx="390" cy="60" r="90" fill="#fff" opacity=".45"/>
+<!-- poste y cables -->
+<path d="M28 96 C120 132 200 120 262 108" stroke="#94a5f5" stroke-width="3" fill="none"/>
+<path d="M28 112 C120 148 200 136 262 124" stroke="#94a5f5" stroke-width="3" fill="none"/>
+<rect x="44" y="74" width="10" height="190" rx="4" fill="#5f75ea"/><rect x="24" y="88" width="52" height="8" rx="4" fill="#3550d6"/>
+<ellipse cx="190" cy="262" rx="150" ry="14" fill="#f86000" opacity=".12"/>
+<!-- casa -->
+<rect x="108" y="150" width="166" height="112" rx="8" fill="#fff"/>
+<rect x="108" y="150" width="166" height="16" fill="#eef2ff"/>
+<path d="M94 158 L191 86 L288 158 Z" fill="url(#roof)" stroke="url(#roof)" stroke-width="10" stroke-linejoin="round"/>
+<rect x="232" y="96" width="22" height="34" rx="3" fill="#0a1f87"/>
+<rect x="128" y="182" width="48" height="40" rx="6" fill="#ffd27a"/><path d="M152 182v40M128 202h48" stroke="#fff" stroke-width="4"/>
+<rect x="204" y="190" width="46" height="72" rx="6" fill="#0b24a8"/><circle cx="240" cy="228" r="4" fill="#ffd27a"/>
+<!-- foco -->
+<circle cx="372" cy="138" r="86" fill="url(#glow)"/>
+<path d="M372 72 a50 50 0 0 1 30 90 c-8 6 -10 14 -10 22 h-40 c0 -8 -2 -16 -10 -22 a50 50 0 0 1 30 -90 z" fill="url(#bulb)"/>
+<path d="M350 92 a34 34 0 0 1 22 -10" stroke="#fff" stroke-width="7" stroke-linecap="round" fill="none" opacity=".8"/>
+<path d="M378 100 l-22 40 h18 l-8 32 26 -44 h-18 z" fill="#fff"/>
+<rect x="352" y="188" width="40" height="10" rx="5" fill="#1b37c0"/><rect x="356" y="202" width="32" height="10" rx="5" fill="#0b24a8"/><rect x="364" y="216" width="16" height="8" rx="4" fill="#0a1f87"/>
+<g stroke="#f86000" stroke-width="6" stroke-linecap="round"><path d="M372 34v-14"/><path d="M430 56l10-10"/><path d="M314 56l-10-10"/><path d="M454 112h14"/><path d="M290 112h-14"/></g>
+</svg>

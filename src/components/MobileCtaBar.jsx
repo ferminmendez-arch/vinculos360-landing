@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import { PHONE_E164 } from "../config.js";
+import { useStrings } from "../i18n.js";
 
 /* Barra fija en móviles. Se oculta mientras el formulario está en pantalla
    para no tapar el botón de envío. */
 export default function MobileCtaBar() {
+  const t = useStrings();
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -31,14 +33,14 @@ export default function MobileCtaBar() {
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-base font-semibold text-slate-800"
         >
           <Phone className="h-5 w-5" aria-hidden="true" />
-          Llamar
+          {t.mobileBar.call}
         </a>
         <a
           href="#contacto"
           tabIndex={hidden ? -1 : undefined}
           className="inline-flex flex-[1.4] items-center justify-center rounded-full bg-brand-700 px-4 py-3 text-base font-semibold text-white"
         >
-          Solicitar ayuda
+          {t.mobileBar.request}
         </a>
       </div>
     </div>

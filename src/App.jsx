@@ -9,6 +9,7 @@ import Footer from "./components/Footer.jsx";
 import MobileCtaBar from "./components/MobileCtaBar.jsx";
 import { serviceFromQuery } from "./content.js";
 import { flushQueue } from "./lib/leads.js";
+import { LangContext, STRINGS } from "./i18n.js";
 
 function scrollToContact() {
   const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -18,7 +19,7 @@ function scrollToContact() {
   });
 }
 
-export default function App() {
+export default function App({ lang = "es" }) {
   const [selectedService, setSelectedService] = useState(() => serviceFromQuery(window.location.search));
 
   // Reintenta solicitudes que no se pudieron guardar en visitas anteriores.
@@ -35,12 +36,12 @@ export default function App() {
   };
 
   return (
-    <>
+    <LangContext value={lang}>
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-full focus:bg-brand-700 focus:px-5 focus:py-3 focus:font-semibold focus:text-white"
       >
-        Saltar al contenido
+        {STRINGS[lang].skip}
       </a>
       <Header />
       <main id="contenido">
@@ -52,6 +53,6 @@ export default function App() {
       </main>
       <Footer />
       <MobileCtaBar />
-    </>
+    </LangContext>
   );
 }

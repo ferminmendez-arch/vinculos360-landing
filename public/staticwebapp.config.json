@@ -2,23 +2,46 @@
   "routes": [
     {
       "route": "/assets/*",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     },
     {
       "route": "/img/*",
-      "headers": { "Cache-Control": "public, max-age=2592000" }
+      "headers": {
+        "Cache-Control": "public, max-age=2592000"
+      }
     },
     {
       "route": "/index.html",
-      "headers": { "Cache-Control": "no-cache" }
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     },
     {
       "route": "/",
-      "headers": { "Cache-Control": "no-cache" }
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "route": "/en/",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "route": "/en/index.html",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     }
   ],
   "responseOverrides": {
-    "404": { "rewrite": "/404.html", "statusCode": 404 }
+    "404": {
+      "rewrite": "/404.html",
+      "statusCode": 404
+    }
   },
   "mimeTypes": {
     ".webmanifest": "application/manifest+json",

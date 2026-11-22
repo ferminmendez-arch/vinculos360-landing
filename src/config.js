@@ -26,6 +26,3 @@ export const LEAD_TIMEOUT_MS = 15000;
 
 /* Ventana para evitar registrar dos veces la misma solicitud. */
 export const DUPLICATE_WINDOW_MS = 30 * 60 * 1000;
-
-export const DEFAULT_WHATSAPP_MESSAGE =
-  "Hola, vi Vínculos 360 y quisiera información sobre servicios para mi hogar.";

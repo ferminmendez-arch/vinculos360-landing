@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Telefonía y otros servicios para el hogar</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecfdf3"/><stop offset="1" stop-color="#d1fae0"/></linearGradient>
+<linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3550d6"/><stop offset="1" stop-color="#0b24a8"/></linearGradient>
+</defs>
+<rect width="480" height="300" rx="28" fill="url(#bg)"/>
+<circle cx="410" cy="250" r="96" fill="#fff" opacity=".45"/>
+<ellipse cx="240" cy="266" rx="180" ry="13" fill="#15803d" opacity=".12"/>
+<!-- mosaico de servicios -->
+<rect x="170" y="62" width="140" height="140" rx="28" fill="#0b24a8"/>
+<rect x="186" y="78" width="50" height="50" rx="14" fill="#fff" opacity=".95"/><rect x="244" y="78" width="50" height="50" rx="14" fill="#ff8a3d"/>
+<rect x="186" y="136" width="50" height="50" rx="14" fill="#25d366"/><rect x="244" y="136" width="50" height="50" rx="14" fill="#fff" opacity=".95"/>
+<path d="M211 92 v22 M200 103 h22" stroke="#0b24a8" stroke-width="6" stroke-linecap="round"/>
+<path d="M262 92 l-6 12 h8 l-4 10 12 -14 h-8 l4 -8 z" fill="#fff"/>
+<path d="M200 158 a14 14 0 0 1 22 0 M205 166 a7 7 0 0 1 12 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<circle cx="269" cy="161" r="11" fill="none" stroke="#0b24a8" stroke-width="5"/><path d="M269 155 v6 l4 3" stroke="#0b24a8" stroke-width="4" stroke-linecap="round" fill="none"/>
+<!-- teléfono fijo / celular -->
+<rect x="60" y="128" width="72" height="124" rx="16" fill="#0a1f87"/>
+<rect x="69" y="144" width="54" height="88" rx="6" fill="#fff"/>
+<path transform="translate(78 170) scale(1.5)" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="none" stroke="#15803d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- casa pequeña con candado -->
+<path d="M346 160 l52 -40 l52 40 v86 a6 6 0 0 1 -6 6 h-92 a6 6 0 0 1 -6 -6 z" fill="#fff"/>
+<path d="M334 166 l64 -50 l64 50" stroke="#f86000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<rect x="380" y="196" width="36" height="56" rx="5" fill="#15803d"/><circle cx="408" cy="226" r="3.5" fill="#fff"/>
+<!-- plus -->
+<circle cx="146" cy="72" r="26" fill="#25d366"/><path d="M146 58v28M132 72h28" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+</svg>

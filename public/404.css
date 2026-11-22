@@ -5,3 +5,4 @@ h1{font-size:1.75rem;margin:2rem 0 .5rem}
 p{color:#475569;line-height:1.6}
 .btn{display:inline-block;margin-top:1.5rem;padding:.9rem 1.6rem;border-radius:999px;background:#0b24a8;color:#fff;font-weight:600;text-decoration:none}
 .btn:focus-visible{outline:3px solid #3550d6;outline-offset:3px}
+.en{margin-top:2rem;font-size:.95rem}.en a{color:#0b24a8}
