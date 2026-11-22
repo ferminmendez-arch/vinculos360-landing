@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="t"><title id="t">Electricidad para el hogar</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a4d"/><stop offset=".55" stop-color="#f86000"/><stop offset="1" stop-color="#c2410c"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff7c2" stop-opacity=".95"/><stop offset=".45" stop-color="#ffd27a" stop-opacity=".45"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+<radialGradient id="glass" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#fff3c4"/><stop offset=".8" stop-color="#ffc24d"/><stop offset="1" stop-color="#ff9a1f"/></radialGradient>
+<linearGradient id="base" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b37c0"/><stop offset=".5" stop-color="#5f75ea"/><stop offset="1" stop-color="#0b24a8"/></linearGradient>
+<linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity=".14"/></linearGradient>
+<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="#fff" opacity=".18"/></pattern>
+<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#7c2d12" flood-opacity=".35"/></filter>
+</defs>
+<rect width="480" height="300" fill="url(#bg)"/>
+<rect width="480" height="300" fill="url(#dots)"/>
+<circle cx="250" cy="120" r="150" fill="url(#glow)"/>
+<g stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".9">
+<path d="M250 22v-14"/><path d="M318 46l12-12"/><path d="M182 46l-12-12"/><path d="M345 112h18"/><path d="M155 112h-18"/></g>
+<!-- foco -->
+<g filter="url(#sh)">
+<path d="M250 48a66 66 0 0 1 40 118c-10 8 -13 18 -13 28h-54c0 -10 -3 -20 -13 -28a66 66 0 0 1 40 -118z" fill="url(#glass)"/>
+<path d="M214 80a44 44 0 0 1 30 -18" stroke="#fff" stroke-width="10" stroke-linecap="round" fill="none" opacity=".9"/>
+<path d="M258 78l-30 52h24l-12 42 36 -58h-24l12 -36z" fill="#f86000"/>
+<rect x="221" y="196" width="58" height="14" rx="7" fill="url(#base)"/>
+<rect x="225" y="213" width="50" height="14" rx="7" fill="url(#base)"/>
+<path d="M236 230h28l-6 12h-16z" fill="#0a1f87"/>
+</g>
+<!-- tarjeta de vidrio: consumo -->
+<g filter="url(#sh)">
+<rect x="28" y="168" width="128" height="104" rx="18" fill="url(#card)" stroke="#fff" stroke-opacity=".55"/>
+<rect x="44" y="184" width="54" height="8" rx="4" fill="#fff" opacity=".9"/>
+<rect x="44" y="244" width="14" height="14" rx="4" fill="#fff" opacity=".75"/><rect x="64" y="232" width="14" height="26" rx="4" fill="#fff" opacity=".75"/>
+<rect x="84" y="222" width="14" height="36" rx="4" fill="#fff" opacity=".85"/><rect x="104" y="210" width="14" height="48" rx="4" fill="#fff"/>
+<rect x="124" y="226" width="14" height="32" rx="4" fill="#1b37c0"/>
+</g>
+<!-- tarjeta de vidrio: casa con enchufe -->
+<g filter="url(#sh)">
+<rect x="336" y="150" width="120" height="120" rx="22" fill="url(#card)" stroke="#fff" stroke-opacity=".55"/>
+<path d="M366 210l30-24 30 24v36a4 4 0 0 1-4 4h-52a4 4 0 0 1-4-4z" fill="#fff"/>
+<path d="M398 200l-10 16h8l-4 14 12-18h-8l4-12z" fill="#f86000"/>
+<circle cx="440" cy="166" r="14" fill="#15803d"/><path d="M433 166l5 5 9-10" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g fill="#fff"><path d="M120 60l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" opacity=".9"/><path d="M400 70l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" opacity=".8"/></g>
+</svg>

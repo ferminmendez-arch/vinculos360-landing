@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="t"><title id="t">Conversación de asesoría por chat</title>
+<defs><linearGradient id="ph" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3550d6"/><stop offset="1" stop-color="#1b37c0"/></linearGradient></defs>
+<circle cx="240" cy="160" r="150" fill="#fff" opacity=".05"/>
+<circle cx="240" cy="160" r="108" fill="#fff" opacity=".05"/>
+<!-- teléfono -->
+<rect x="170" y="24" width="140" height="272" rx="26" fill="url(#ph)"/>
+<rect x="182" y="46" width="116" height="228" rx="12" fill="#f8fafc"/>
+<rect x="182" y="46" width="116" height="34" rx="12" fill="#15803d"/><rect x="182" y="66" width="116" height="14" fill="#15803d"/>
+<circle cx="200" cy="63" r="9" fill="#fff"/><rect x="216" y="58" width="52" height="8" rx="4" fill="#fff" opacity=".9"/>
+<rect x="192" y="94" width="76" height="30" rx="10" fill="#e2e8f0"/>
+<rect x="212" y="134" width="76" height="40" rx="10" fill="#d1fae0"/>
+<rect x="192" y="184" width="66" height="26" rx="10" fill="#e2e8f0"/>
+<rect x="222" y="220" width="66" height="30" rx="10" fill="#d1fae0"/>
+<!-- burbuja izquierda: casa -->
+<g transform="translate(40 70)"><rect width="110" height="80" rx="20" fill="#fff"/><path d="M90 80 l18 18 v-24 z" fill="#fff"/>
+<path d="M32 46 l23 -18 l23 18 v22 h-46 z" fill="#0b24a8"/><rect x="49" y="52" width="12" height="16" rx="2" fill="#ff8a3d"/></g>
+<!-- burbuja derecha: lista -->
+<g transform="translate(330 150)"><rect width="120" height="96" rx="20" fill="#fff"/><path d="M10 96 l-16 18 v-26 z" fill="#fff"/>
+<g stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="5">
+<path d="M20 30 l7 7 l12 -13" stroke="#15803d"/><path d="M20 54 l7 7 l12 -13" stroke="#15803d"/><path d="M20 78 l7 7 l12 -13" stroke="#f86000"/></g>
+<rect x="50" y="26" width="52" height="8" rx="4" fill="#c2ccfb"/><rect x="50" y="50" width="44" height="8" rx="4" fill="#c2ccfb"/><rect x="50" y="74" width="54" height="8" rx="4" fill="#c2ccfb"/></g>
+<!-- rayo -->
+<circle cx="390" cy="78" r="28" fill="#f86000"/><path d="M394 60 l-14 22 h11 l-5 18 16 -24 h-11 z" fill="#fff"/>
+<circle cx="86" cy="232" r="24" fill="#94a5f5" opacity=".9"/><path d="M74 230 a16 16 0 0 1 24 0 M79 237 a8 8 0 0 1 14 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="86" cy="243" r="3" fill="#fff"/>
+</svg>

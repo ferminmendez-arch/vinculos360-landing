@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+/* Colores de marca tomados del logotipo de Vínculos 360 */
+@theme {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #dfe5ff;
+  --color-brand-200: #c2ccfb;
+  --color-brand-300: #94a5f5;
+  --color-brand-400: #5f75ea;
+  --color-brand-500: #3550d6;
+  --color-brand-600: #1b37c0;
+  --color-brand-700: #0b24a8;
+  --color-brand-800: #0a1f87;
+  --color-brand-900: #0c1c66;
+  --color-brand-950: #07113d;
+
+  --color-accent-50: #fff4ec;
+  --color-accent-100: #ffe5d1;
+  --color-accent-200: #ffc79f;
+  --color-accent-400: #ff8a3d;
+  --color-accent-500: #f86000;
+  --color-accent-600: #e05500;
+  --color-accent-700: #c2410c;
+
+  /* Verde WhatsApp con contraste AA sobre texto blanco */
+  --color-wa-50: #ecfdf3;
+  --color-wa-100: #d1fae0;
+  --color-wa-500: #25d366;
+  --color-wa-600: #15803d;
+  --color-wa-700: #166534;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-slate-900 antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-brand-500);
+    outline-offset: 3px;
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float-soft {
+  animation: float-soft 6s ease-in-out infinite;
+}
+
+.animate-float-soft-delay {
+  animation: float-soft 6s ease-in-out 1.5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
