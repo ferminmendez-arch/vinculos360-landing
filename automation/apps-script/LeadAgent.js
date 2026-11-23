@@ -569,11 +569,12 @@ function processNewLeads() {
       v360Retry(function () {
         sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, V360.TRACKING_HEADERS.length).setValues(rows);
       });
-      v360ApplyStatusValidation(sheet);
       var actionable = fresh.filter(function (l) { return l.status === "Nuevo"; });
       if (actionable.length) v360NotifyNewLeads(settings, ss, actionable);
     }
 
+    // Se aplica en cada revisión para que todas las filas tengan la lista de estados vigente.
+    v360ApplyStatusValidation(data.tracking.sheet);
     var metrics = v360ComputeMetrics(data.leads, v360ReadTracking(ss).statusByKey, v360ReadSpend(ss), settings, now);
     v360WritePanel(ss, metrics);
     v360CheckBudget(settings, metrics);
