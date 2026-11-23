@@ -25,6 +25,7 @@ export default defineConfig([
       sourceType: 'script',
       globals: {
         ContentService: 'readonly',
+        PropertiesService: 'readonly',
         SpreadsheetApp: 'readonly',
         LockService: 'readonly',
         Utilities: 'readonly',

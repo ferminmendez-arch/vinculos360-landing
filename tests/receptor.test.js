@@ -7,7 +7,7 @@ import { interpretResponse } from "../src/lib/leads.js";
 
 const SOURCE = fs.readFileSync(new URL("../automation/apps-script/receptor/Receptor.js", import.meta.url), "utf8");
 
-function createEnv({ failAppend = false, lockAvailable = true, existing = null } = {}) {
+function createEnv({ failAppend = false, lockAvailable = true, existing = null, standalone = false, props = {} } = {}) {
   const rows = existing ? existing.map((r) => [...r]) : [];
   let flushed = 0;
   const sheet = {
@@ -21,6 +21,11 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null }
     },
   };
   let exists = Boolean(existing);
+  const opened = [];
+  const spreadsheet = {
+    getSheetByName: () => (exists ? sheet : null),
+    insertSheet: () => { exists = true; return sheet; },
+  };
   const sandbox = {
     Date,
     console: { error() {}, log() {} },
@@ -28,11 +33,10 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null }
       MimeType: { JSON: "json" },
       createTextOutput: (text) => ({ text, setMimeType() { return this; } }),
     },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] || null }) },
     SpreadsheetApp: {
-      getActiveSpreadsheet: () => ({
-        getSheetByName: () => (exists ? sheet : null),
-        insertSheet: () => { exists = true; return sheet; },
-      }),
+      getActiveSpreadsheet: () => (standalone ? null : spreadsheet),
+      openById: (id) => { opened.push(id); return spreadsheet; },
       flush: () => { flushed += 1; },
     },
     LockService: { getScriptLock: () => ({ tryLock: () => lockAvailable, releaseLock: () => {} }) },
@@ -44,7 +48,7 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null }
     const out = ctx.doPost({ postData: { contents: typeof body === "string" ? body : JSON.stringify(body) } });
     return JSON.parse(out.text);
   };
-  return { ctx, rows, post, flushed: () => flushed };
+  return { ctx, rows, post, opened, flushed: () => flushed };
 }
 
 /* El mismo payload que arma src/components/ContactSection.jsx. */
@@ -124,4 +128,12 @@ test("no reescribe encabezados si la pestaña ya tiene datos", () => {
 test("doGet responde sin datos", () => {
   const env = createEnv();
   assert.deepEqual({ ...JSON.parse(env.ctx.doGet().text) }, { ok: true, service: "vinculos360-leads" });
+});
+
+test("proyecto independiente: usa SPREADSHEET_ID y, si falta, no confirma", () => {
+  const env = createEnv({ standalone: true, props: { SPREADSHEET_ID: "abc123" } });
+  assert.equal(env.post(PAYLOAD).ok, true);
+  assert.deepEqual([...env.opened], ["abc123"]);
+  const missing = createEnv({ standalone: true }).post(PAYLOAD);
+  assert.equal(missing.ok, false);
 });

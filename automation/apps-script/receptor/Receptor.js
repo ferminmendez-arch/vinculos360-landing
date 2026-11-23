@@ -12,8 +12,10 @@
      escribir la fila. Si algo falla responde {"ok":false,...}: el sitio
      no abre WhatsApp como si estuviera guardado y reintenta después.
 
-   Instalación: Extensiones → Apps Script desde la hoja, pegar este
-   archivo, ejecutar setupLeadsSheet() una vez y luego
+   Instalación: proyecto de Apps Script vinculado a la hoja
+   (Extensiones → Apps Script) o independiente con la propiedad del
+   script SPREADSHEET_ID. Pegar este archivo, ejecutar setupLeadsSheet()
+   una vez y luego
    Implementar → Nueva implementación → Aplicación web
    (Ejecutar como: Yo · Quién tiene acceso: Cualquier usuario).
 ========================================================= */
@@ -66,8 +68,16 @@ function receptorValidate(data) {
   };
 }
 
+function receptorSpreadsheet() {
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  var id = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+  if (!id) throw new Error("Falta la propiedad SPREADSHEET_ID.");
+  return SpreadsheetApp.openById(id);
+}
+
 function receptorSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = receptorSpreadsheet();
   var sheet = ss.getSheetByName(RECEPTOR.SHEET);
   if (!sheet) sheet = ss.insertSheet(RECEPTOR.SHEET);
   if (sheet.getLastRow() === 0) {
