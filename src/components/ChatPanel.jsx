@@ -230,10 +230,10 @@ export default function ChatPanel({ open, onClose, lang }) {
       aria-modal="false"
       aria-labelledby="v360-chat-title"
       hidden={!open}
-      className="fixed inset-0 z-50 flex flex-col bg-slate-50 outline-none md:inset-auto md:right-6 md:bottom-24 md:h-[min(640px,calc(100vh-8rem))] md:w-[400px] md:overflow-hidden md:rounded-3xl md:shadow-2xl md:shadow-brand-950/30 md:ring-1 md:ring-slate-200"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-slate-50 outline-none md:inset-auto md:right-6 md:bottom-24 md:h-[min(640px,calc(100vh-8rem))] md:w-[400px] md:overflow-hidden md:rounded-3xl md:shadow-2xl md:shadow-brand-950/30 md:ring-1 md:ring-slate-200"
     >
       {/* Encabezado */}
-      <header className="flex items-center gap-3 bg-brand-800 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
+      <header className="flex shrink-0 items-center gap-3 bg-brand-800 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
         <img src="/favicon-48.png" alt="" width="40" height="40" className="h-10 w-10 rounded-full bg-white p-0.5" />
         <div className="min-w-0 flex-1">
           <h2 id="v360-chat-title" className="truncate text-base font-bold">
@@ -252,7 +252,7 @@ export default function ChatPanel({ open, onClose, lang }) {
       </header>
 
       {/* Conversación */}
-      <div ref={logRef} role="log" aria-live="polite" aria-relevant="additions" className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4">
+      <div ref={logRef} role="log" aria-live="polite" aria-relevant="additions" className="relative min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4">
         <BotBubble>{s.greeting}</BotBubble>
         {answered.map((item) => (
           <div key={item.id} className="space-y-3">
@@ -284,7 +284,7 @@ export default function ChatPanel({ open, onClose, lang }) {
       </div>
 
       {/* Respuesta */}
-      <div className="border-t border-slate-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="relative shrink-0 overflow-hidden border-t border-slate-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {step?.kind === "choice" && !done && (
           <div className="flex flex-wrap gap-2" role="group" aria-label={questionText(s, state, step.id)}>
             {step.options.map((value, i) => (
