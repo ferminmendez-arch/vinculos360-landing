@@ -18,4 +18,21 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Receptor de leads: Google Apps Script (script clásico, funciones globales).
+    files: ['automation/apps-script/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        ContentService: 'readonly',
+        PropertiesService: 'readonly',
+        SpreadsheetApp: 'readonly',
+        LockService: 'readonly',
+        Utilities: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { vars: 'local', caughtErrors: 'none' }],
+    },
+  },
 ])
