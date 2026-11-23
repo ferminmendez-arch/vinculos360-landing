@@ -76,14 +76,9 @@ export async function submitChatLead(payload, { endpoint = LEADS_API, timeoutMs 
     return { ...(await fallback(toSheetPayload(payload))), via: "sheet_fallback" };
   }
 
-  let body = "";
-  try {
-    body = await response.text();
-  } catch {
-    body = "";
-  }
+  const body = await response.text().catch(() => "");
   const result = interpretResponse(response.status, body);
-  let data = {};
+  let data;
   try {
     data = JSON.parse(body) || {};
   } catch {
