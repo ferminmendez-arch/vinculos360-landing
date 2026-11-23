@@ -19,20 +19,29 @@ export default defineConfig([
     },
   },
   {
-    // Receptor de leads: Google Apps Script (script clásico, funciones globales).
+    // Google Apps Script (script clásico, funciones globales): receptor y agente de leads.
     files: ['automation/apps-script/**/*.js'],
     languageOptions: {
       sourceType: 'script',
       globals: {
         ContentService: 'readonly',
-        PropertiesService: 'readonly',
         SpreadsheetApp: 'readonly',
+        PropertiesService: 'readonly',
+        Session: 'readonly',
         LockService: 'readonly',
+        MailApp: 'readonly',
         Utilities: 'readonly',
+        ScriptApp: 'readonly',
       },
     },
     rules: {
       'no-unused-vars': ['error', { vars: 'local', caughtErrors: 'none' }],
     },
+  },
+  {
+    // Scripts de los agentes y pruebas (Node).
+    files: ['automation/**/*.mjs', 'tests/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: { globals: { ...globals.node } },
   },
 ])

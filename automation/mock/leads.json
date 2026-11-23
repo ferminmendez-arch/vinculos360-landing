@@ -1,0 +1,23 @@
+{
+  "_comment": "Datos FICTICIOS para pruebas. Nombres inventados; teléfonos con central 000 o 555-01xx, que no se asignan a personas.",
+  "rows": [
+    ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Source", "Medium", "Campaign", "Ad", "Fbclid", "Device"],
+    ["2026-11-20T15:02:00Z", "PRUEBA QA", "(281) 555-0101", "77001", "Electricidad", "Direct", "", "", "", "", "Desktop"],
+    ["2026-12-01T01:30:00Z", "Lucía Ramos", "(713) 000-1001", "77036", "Electricidad", "facebook", "organic", "luz-texas", "efl-que-es", "", "Mobile"],
+    ["2026-12-01T01:31:10Z", "Lucía Ramos", "713-000-1001", "77036", "Electricidad", "facebook", "organic", "luz-texas", "efl-que-es", "", "Mobile"],
+    ["2026-12-01T14:10:00Z", "Pedro Salas", "(832) 000-2002", "77084", "Electricidad", "facebook", "organic", "luz-texas", "efl-que-es", "", "Mobile"],
+    ["2026-12-02T19:00:00Z", "Carmen Ortiz", "(512) 000-3003", "78745", "Electricidad", "facebook", "organic", "luz-texas", "areas-sin-opcion", "", "Mobile"],
+    ["2026-12-02T20:45:00Z", "Jorge Méndez", "(214) 000-4004", "75217", "Electricidad", "Direct", "", "", "", "", "Desktop"],
+    ["2026-12-03T16:20:00Z", "Ana Torres", "(832) 000-2002", "77084", "Internet", "facebook", "organic", "luz-texas", "areas-sin-opcion", "", "Mobile"],
+    ["2026-12-04T02:15:00Z", "Rosa Vega", "(915) 000-5005", "79936", "Electricidad", "facebook", "organic", "luz-texas", "efl-500-1000-2000", "", "Mobile"],
+    ["2026-12-04T03:00:00Z", "Miguel Cruz", "(405) 000-6006", "73101", "Electricidad", "facebook", "paid", "luz-texas-ads", "anuncio-a", "fbclid-demo", "Mobile"],
+    ["2026-12-04T17:40:00Z", "=HYPERLINK(\"x\")", "(713) 000-7007", "77002", "Seguridad y monitoreo", "google.com", "", "", "", "", "Desktop"],
+    ["2026-12-05T13:00:00Z", "Elena Ruiz", "713 000 80", "77002", "Electricidad", "facebook", "organic", "luz-texas", "efl-que-es", "", "Mobile"],
+    ["2026-12-05T22:10:00Z", "Raúl Peña", "(281) 000-9009", "77493", "Electricidad", "facebook", "paid", "luz-texas-ads", "anuncio-a", "fbclid-demo2", "Mobile"]
+  ],
+  "spend": [
+    ["Fecha", "Plataforma", "Campaña", "Monto USD", "Nota"],
+    ["2026-12-03T12:00:00Z", "Facebook", "luz-texas-ads", 15, "Prueba ficticia"],
+    ["2026-12-05T12:00:00Z", "Facebook", "luz-texas-ads", 12.5, "Prueba ficticia"]
+  ]
+}

@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - main
+    # Los borradores de marketing no forman parte del sitio: no despliegan.
+    paths-ignore:
+      - "marketing/**"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+    paths-ignore:
+      - "marketing/**"
 
 jobs:
   quality_checks:
