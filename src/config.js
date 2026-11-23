@@ -14,11 +14,12 @@ export const FACEBOOK_URL = "https://www.facebook.com/vinculos360";
 
 /*
   Endpoint de Google Apps Script (/exec) que guarda los leads en la
-  hoja "Leads". Se puede sobrescribir con VITE_LEADS_ENDPOINT (por ejemplo,
+  hoja "Vínculos 360 — Leads" (pestaña "Leads"). Código del receptor:
+  automation/apps-script/receptor/Receptor.js. Se puede sobrescribir con VITE_LEADS_ENDPOINT (por ejemplo,
   para apuntar un entorno de vista previa a una hoja de pruebas).
 */
 const DEFAULT_LEADS_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbzZUfbdvaZ22Hark9E-mcDxPLifgwZaWYvVcRBuxXG6D2MgWnpMAzPYHp6Y5QFKySRT/exec";
+  "https://script.google.com/macros/s/AKfycbwEVckFhVLHNjrMFNDbYe0N88ikApHK64Z2oB2RJH18nDqA7r02xrwSxYE8L5dzhLNm/exec";
 
 export const LEADS_ENDPOINT =
   import.meta.env?.VITE_LEADS_ENDPOINT || DEFAULT_LEADS_ENDPOINT;
