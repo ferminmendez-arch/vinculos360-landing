@@ -46,8 +46,9 @@ var V360 = {
   ],
   SPEND_HEADERS: ["Fecha", "Plataforma", "Campaña", "Monto USD", "Nota"],
   WEEKLY_HEADERS: ["Semana que termina", "Leads válidos", "Electricidad TX", "Calificados", "Gasto USD", "Costo por lead", "Costo por calificado"],
-  STATUSES: ["Nuevo", "Contactado", "Calificado", "No calificado", "Cliente", "Sin respuesta", "No contactar", "Duplicado", "Prueba"],
-  QUALIFIED_STATUSES: ["Calificado", "Cliente"],
+  STATUSES: ["Nuevo", "Contactado", "Calificado", "Inscripción en proceso", "Inscrito", "No calificado", "Cliente", "Sin respuesta", "No contactar", "Duplicado", "Prueba"],
+  QUALIFIED_STATUSES: ["Calificado", "Inscripción en proceso", "Inscrito", "Cliente"],
+  ENROLLED_STATUSES: ["Inscrito", "Cliente"],
   /* Prefijos de ZIP donde la mayoría del área NO tiene opción de proveedor:
      Austin (787), San Antonio (782), El Paso (798, 799). Solo marca "verificar". */
   NO_CHOICE_ZIP_PREFIXES: ["782", "787", "798", "799"],
@@ -300,6 +301,7 @@ function v360ComputeMetrics(leads, statusByKey, spendRows, settings, now) {
   var status = function (l) { return statusByKey[l.key] || l.status; };
   var qualified = valid.filter(function (l) { return V360.QUALIFIED_STATUSES.indexOf(status(l)) !== -1; });
   var contacted = valid.filter(function (l) { return status(l) !== "Nuevo"; });
+  var enrolled = valid.filter(function (l) { return V360.ENROLLED_STATUSES.indexOf(status(l)) !== -1; });
   var pending = valid.filter(function (l) {
     return status(l) === "Nuevo" && l.receivedAt && now.getTime() - l.receivedAt.getTime() > 24 * 3600000;
   });
@@ -317,6 +319,7 @@ function v360ComputeMetrics(leads, statusByKey, spendRows, settings, now) {
     leadsLast7Days: valid.filter(function (l) { return l.receivedAt && l.receivedAt.getTime() >= weekAgo; }).length,
     electricityTexas: valid.filter(function (l) { return l.priority === "A"; }).length,
     qualified: qualified.length,
+    enrolled: enrolled.length,
     contacted: contacted.length,
     pendingOver24h: pending.length,
     excludedTests: leads.filter(function (l) { return l.status === "Prueba"; }).length,
@@ -359,6 +362,7 @@ function v360PanelRows(m) {
     ["Leads en los últimos 7 días", m.leadsLast7Days],
     ["Electricidad en Texas (prioridad A)", m.electricityTexas],
     ["Calificados (estado puesto por el equipo)", m.qualified + " de " + m.goal],
+    ["Inscritos (clientes dados de alta)", m.enrolled],
     ["Contactados", m.contacted],
     ["Sin contactar por más de 24 h", m.pendingOver24h],
     ["Pruebas excluidas / duplicados excluidos", m.excludedTests + " / " + m.excludedDuplicates],
@@ -394,6 +398,7 @@ function v360ReportHtml(m, sheetUrl) {
     "<p style='color:#6b7280'>Generado " + v360Esc(m.generatedAt.toISOString().slice(0, 16).replace("T", " ")) + " UTC. Solo datos observados en la hoja; nada estimado.</p>" +
     "<table style='border-collapse:collapse;width:100%'>" +
     tr("Calificados / meta", m.qualified + " / " + m.goal) +
+    tr("Inscritos", m.enrolled) +
     tr("Leads válidos", m.leadsValid) +
     tr("Leads últimos 7 días", m.leadsLast7Days) +
     tr("Electricidad en Texas (A)", m.electricityTexas) +

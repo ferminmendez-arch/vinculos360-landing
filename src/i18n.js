@@ -33,12 +33,12 @@ const es = {
     badge: "Electricidad · Internet · Seguridad · Otros servicios",
     titleStart: "Los servicios esenciales de tu hogar,",
     titleHighlight: "en un solo lugar",
-    text: "Te ayudamos a comparar opciones de electricidad, internet, seguridad y otros servicios esenciales para encontrar lo que mejor se adapte a las necesidades de tu hogar.",
+    text: "Somos representantes independientes. Te explicamos de forma clara las opciones de electricidad, internet, seguridad y otros servicios esenciales de los proveedores con los que trabajamos, para que elijas lo que mejor se adapte a tu hogar.",
     primary: "Ver mis opciones",
     whatsapp: "Hablar por WhatsApp",
     imageAlt: "Familia sonriente revisando sus facturas en la cocina de su casa",
     chatStatus: "En línea",
-    chatMessage: "¡Hola! Te ayudamos a comparar tus opciones.",
+    chatMessage: "¡Hola! Te explicamos tus opciones.",
   },
   benefits: ["Atención personalizada", "Orientación sin compromiso", "Proceso rápido y sencillo"],
 
@@ -77,8 +77,8 @@ const es = {
     stepLabel: "Paso ",
     items: [
       { title: "Cuéntanos qué necesitas", description: "Selecciona el servicio que deseas revisar y comparte tus datos básicos." },
-      { title: "Revisamos tus opciones", description: "Analizamos alternativas disponibles de acuerdo con tus necesidades." },
-      { title: "Te guiamos paso a paso", description: "Te explicamos las opciones de forma clara para que puedas comparar." },
+      { title: "Revisamos tus opciones", description: "Revisamos las opciones disponibles en tu zona con los proveedores con los que trabajamos." },
+      { title: "Te guiamos paso a paso", description: "Te explicamos cada opción de forma clara, con sus documentos, antes de que decidas." },
       { title: "Elige la mejor opción para ti", description: "Tú decides qué servicio se adapta mejor a las necesidades de tu hogar." },
     ],
   },
@@ -139,7 +139,7 @@ const es = {
   },
 
   footer: {
-    about: "Conectamos lo que te importa. Te ayudamos a comparar opciones de servicios esenciales para tu hogar.",
+    about: "Conectamos lo que te importa. Somos representantes independientes de servicios esenciales para el hogar; no somos una compañía de electricidad, internet ni seguridad.",
     navTitle: "Navegación",
     navLabel: "Pie de página",
     contactTitle: "Contacto",
@@ -189,12 +189,12 @@ const en = {
     badge: "Electricity · Internet · Security · Other services",
     titleStart: "Your home's essential services,",
     titleHighlight: "all in one place",
-    text: "We help you compare electricity, internet, security and other essential service options to find what best fits your home's needs.",
+    text: "We are independent representatives. We clearly explain electricity, internet, security and other essential service options from the providers we work with, so you can choose what best fits your home.",
     primary: "See my options",
     whatsapp: "Chat on WhatsApp",
     imageAlt: "Smiling family reviewing their bills in their kitchen at home",
     chatStatus: "Online",
-    chatMessage: "Hi! We'll help you compare your options.",
+    chatMessage: "Hi! We'll explain your options.",
   },
   benefits: ["Personalized attention", "No-obligation guidance", "Quick and simple process"],
 
@@ -232,8 +232,8 @@ const en = {
     stepLabel: "Step ",
     items: [
       { title: "Tell us what you need", description: "Choose the service you want to review and share your basic details." },
-      { title: "We review your options", description: "We look at the available alternatives based on your needs." },
-      { title: "We guide you step by step", description: "We explain your options clearly so you can compare them." },
+      { title: "We review your options", description: "We review the options available in your area from the providers we work with." },
+      { title: "We guide you step by step", description: "We explain each option clearly, with its documents, before you decide." },
       { title: "Choose what's best for you", description: "You decide which service best fits your home's needs." },
     ],
   },
@@ -293,7 +293,7 @@ const en = {
   },
 
   footer: {
-    about: "Connecting what matters to you. We help you compare essential service options for your home.",
+    about: "Connecting what matters to you. We are independent representatives for essential home services; we are not an electricity, internet or security company.",
     navTitle: "Navigation",
     navLabel: "Footer",
     contactTitle: "Contact",
