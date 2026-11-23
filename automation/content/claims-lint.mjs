@@ -25,7 +25,8 @@ const PROVIDER_NAMES = [
   "TXU", "Reliant", "Gexa", "Rhythm", "Chariot", "Constellation", "Direct Energy", "Green Mountain",
   "Just Energy", "Frontier Utilities", "4Change", "Cirro", "Pulse Power", "Discount Power", "Payless Power",
   "Express Energy", "Champion Energy", "Ambit", "Octopus", "Tara Energy", "Shell Energy", "Energy Texas",
-  "Amigo Energy", "Trieagle", "Veteran Energy", "Base Power", "Vivint", "ADT", "Ring", "SimpliSafe",
+  "Amigo Energy", "Trieagle", "Veteran Energy", "Base Power", "XOOM", "Xoom Energy", "ACN", "acnibo",
+  "IDSeal", "DIRECTV", "Flash Mobile", "Impact Health Sharing", "Vivint", "ADT", "Ring", "SimpliSafe",
   "AT&T", "Xfinity", "Spectrum", "Frontier", "T-Mobile", "Verizon",
 ];
 

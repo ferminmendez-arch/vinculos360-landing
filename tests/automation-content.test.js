@@ -66,6 +66,13 @@ test("el proveedor de seguridad nunca puede aparecer en contenido público", () 
   assert.ok(rules.includes("provider-name"));
 });
 
+test("las marcas de la red de distribución nunca aparecen en contenido público", () => {
+  for (const text of ["Plan de XOOM Energy", "Únete a ACN", "ferminmendez.acnibo.com/us-en", "Protección con IDSeal", "TV con DIRECTV"]) {
+    const rules = lintText(text, { business }).map((f) => f.rule);
+    assert.ok(rules.includes("provider-name"), text);
+  }
+});
+
 test("'gratis' se permite solo cuando el dueño lo confirma", () => {
   const confirmed = structuredClone(business);
   confirmed.commercialFacts.serviceIsFreeForCustomer = { verified: true, value: true };
