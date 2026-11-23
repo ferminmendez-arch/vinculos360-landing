@@ -58,6 +58,10 @@ return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
 // en caso de error: { result: "error", error: "..." }
 ```
 
+## Chatbot de calificación
+
+Asistente flotante bilingüe (sin IA) que califica al visitante y envía la solicitud a `POST /api/leads` (Azure Functions administradas de Static Web Apps, carpeta `api/`), que la guarda en la hoja de Leads y, opcionalmente, en Azure Table Storage. Detalles, configuración, despliegue, reversión y costos: [`docs/CHATBOT.md`](docs/CHATBOT.md).
+
 ## Seguridad (Content-Security-Policy)
 
 `public/staticwebapp.config.json` solo permite scripts propios y conexiones a `script.google.com` / `script.googleusercontent.com`. Si se agrega Google Tag Manager, Meta Pixel u otro script externo, hay que añadir sus dominios a la CSP.

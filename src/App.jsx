@@ -7,6 +7,7 @@ import Testimonials from "./components/Testimonials.jsx";
 import ContactSection from "./components/ContactSection.jsx";
 import Footer from "./components/Footer.jsx";
 import MobileCtaBar from "./components/MobileCtaBar.jsx";
+import Chatbot from "./components/Chatbot.jsx";
 import { serviceFromQuery } from "./content.js";
 import { flushQueue } from "./lib/leads.js";
 import { LangContext, STRINGS } from "./i18n.js";
@@ -53,6 +54,7 @@ export default function App({ lang = "es" }) {
       </main>
       <Footer />
       <MobileCtaBar />
+      <Chatbot />
     </LangContext>
   );
 }

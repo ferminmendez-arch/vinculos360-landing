@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'api/node_modules']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -37,6 +37,11 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['error', { vars: 'local', caughtErrors: 'none' }],
     },
+  },
+  {
+    // API del chatbot (Azure Functions, Node).
+    files: ['api/**/*.{js,mjs}'],
+    languageOptions: { globals: { ...globals.node } },
   },
   {
     // Scripts de los agentes y pruebas (Node).
