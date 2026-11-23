@@ -47,6 +47,10 @@ Why this design: GitHub Actions is free for public repositories and already used
 | On merge | Approved posts are scheduled on Facebook (or simulated if disabled) | — |
 | Whenever you spend on ads | — | Add a row to **Gastos** |
 
+## Current installation (Nov 22, 2026)
+
+The site form now posts to **Vínculos 360 — Receptor de leads** (`automation/apps-script/receptor/Receptor.js`), an Apps Script web app in the owner's Google account. It writes to the `Leads` tab of the sheet **Vínculos 360 — Leads**. Agents 2 and 3 are installed as the Apps Script project **Vinculos 365** against that sheet, with both triggers active. The steps below describe how to reinstall either one.
+
 ## Setup (owner steps)
 
 ### A. Lead management and analytics (Google) — ~10 minutes
