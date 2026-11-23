@@ -220,3 +220,19 @@ test("runSelfTest funciona sin hoja ni correo", () => {
   assert.equal(res.leadsValid, 3);
   assert.equal(e.emails.length, 0);
 });
+
+test("estados de inscripción: cuentan como calificados e 'Inscrito' suma a inscritos", () => {
+  const e = env();
+  e.gas.processNewLeads();
+  const sheet = e.sheet("Seguimiento");
+  const col = sheet.values[0].indexOf("Estado");
+  const name = sheet.values[0].indexOf("Nombre");
+  sheet.values.forEach((r, i) => {
+    if (i && r[name] === "Pedro Salas") r[col] = "Inscrito";
+    if (i && r[name] === "Jorge Méndez") r[col] = "Inscripción en proceso";
+  });
+  const m = e.gas.processNewLeads().metrics;
+  assert.equal(m.qualified, 2);
+  assert.equal(m.enrolled, 1);
+  assert.match(e.sheet("Panel").values.map((r) => r.join(" | ")).join("\n"), /Inscritos \(clientes dados de alta\) \| 1/);
+});
