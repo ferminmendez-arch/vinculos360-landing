@@ -1,5 +1,6 @@
 import { ArrowRight, Cctv, CircleCheck, CreditCard, Plus, ShieldCheck, Smartphone, Tv, Wifi, Zap } from "lucide-react";
 import { SERVICES } from "../content.js";
+import { openChat } from "../lib/chatbot/open.js";
 import { useStrings } from "../i18n.js";
 import { SectionHeading } from "./ui.jsx";
 
@@ -55,7 +56,10 @@ export default function Services({ selectedService, onSelect }) {
                 <button
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => onSelect(service.value, { scroll: true })}
+                  onClick={() => {
+                    onSelect(service.value);
+                    openChat(service.slug);
+                  }}
                   className={`group flex w-full flex-col overflow-hidden rounded-3xl border-2 bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
                     isSelected ? `${tone.selected} shadow-lg` : `border-slate-200 ${tone.hover}`
                   }`}
@@ -107,7 +111,10 @@ export default function Services({ selectedService, onSelect }) {
                 <button
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => onSelect(service.value, { scroll: true })}
+                  onClick={() => {
+                    onSelect(service.value);
+                    openChat(service.slug);
+                  }}
                   className={`group flex w-full items-start gap-4 rounded-2xl border-2 bg-white p-5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
                     isSelected ? `${tone.selected} shadow-lg` : `border-slate-200 ${tone.hover}`
                   }`}

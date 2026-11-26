@@ -50,22 +50,19 @@
   }
 }
 
-@keyframes float-soft {
+/* Resalta el botón del chat cuando la visita llega con ?chat=1 */
+@keyframes attention {
   0%,
   100% {
-    transform: translateY(0);
+    box-shadow: 0 0 0 0 rgb(27 55 192 / 0.55);
   }
-  50% {
-    transform: translateY(-6px);
+  60% {
+    box-shadow: 0 0 0 14px rgb(27 55 192 / 0);
   }
 }
 
-.animate-float-soft {
-  animation: float-soft 6s ease-in-out infinite;
-}
-
-.animate-float-soft-delay {
-  animation: float-soft 6s ease-in-out 1.5s infinite;
+.animate-attention {
+  animation: attention 1.5s ease-out 4;
 }
 
 @media (prefers-reduced-motion: reduce) {

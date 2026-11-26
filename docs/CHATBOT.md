@@ -30,7 +30,8 @@ Hoja Leads ──(cada 15 min)──▶ Agente de leads: Seguimiento + correo al
 
 | Archivo | Qué hace |
 | --- | --- |
-| `src/components/Chatbot.jsx` | Botón flotante. El panel se descarga solo al abrir el chat. |
+| `src/components/Chatbot.jsx` | Único chat del sitio. En computadora: botón flotante; en celular se abre desde la barra inferior ("Revisar mis opciones"). El panel se descarga solo al abrir el chat. |
+| `src/lib/chatbot/open.js` | `openChat(serviceKey?)`: lo usan el botón principal del inicio, las tarjetas de servicios (abren el chat con el servicio ya elegido) y la barra móvil. `?chat=1` no abre el chat: resalta su botón unos segundos. |
 | `src/components/ChatPanel.jsx` | Conversación, entradas, consentimiento y estados de envío. |
 | `src/lib/chatbot/flow.js` | Flujo determinista (siguiente paso, Atrás, payload). |
 | `src/lib/chatbot/strings.js` | Textos ES/EN, consentimiento y aviso de privacidad. |
