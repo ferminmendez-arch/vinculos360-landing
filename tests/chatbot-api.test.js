@@ -55,20 +55,21 @@ const SAS = "https://acct.table.core.windows.net/chatleads?sv=2019-02-02&tn=chat
 const EVENTS_SAS = "https://acct.table.core.windows.net/chatevents?sv=2019-02-02&tn=chatevents&sp=a&sig=y";
 
 test("guarda en la hoja (por defecto) y confirma con id", async () => {
-  const fetchImpl = fakeFetch([["script.google.com", sheetOk]]);
+  const ptc = () => ({ ok: true, status: 200, json: async () => [{ company_tdu_name: "CENTERPOINT ENERGY HOUSTON ELECTRIC LLC" }, { company_tdu_name: "CENTERPOINT ENERGY HOUSTON ELECTRIC LLC" }] });
+  const fetchImpl = fakeFetch([["script.google.com", sheetOk], ["powertochoose.org", ptc]]);
   const res = await handleLead(request(BODY), { env: {}, fetchImpl, log: quiet, limiter: allowAll });
   assert.equal(res.status, 200);
   assert.equal(res.jsonBody.ok, true);
   assert.equal(res.jsonBody.result, "success");
   assert.equal(res.jsonBody.prequalified, true);
   assert.deepEqual(res.jsonBody.saved, ["sheet"]);
-  const sent = fetchImpl.calls[0].body;
+  const sent = fetchImpl.calls.find((c) => c.url.includes("script.google.com")).body;
   assert.equal(sent.name, "Prueba QA");
   assert.equal(sent.phone, "(281) 555-0100");
   assert.equal(sent.service, "Electricidad");
   assert.equal(sent.device, "Mobile · Chatbot · Ahorro: alta");
   assert.equal(sent.qualification, "Precalificado");
-  assert.equal(sent.answers, "property=casa; decision=si; bill=200; kwh=1000; contract=sincontrato; precio_kwh=20c; oportunidad=alta");
+  assert.equal(sent.answers, "property=casa; decision=si; bill=200; kwh=1000; contract=sincontrato; precio_kwh=20c; oportunidad=alta; distribuidora=CenterPoint");
   assert.equal(res.jsonBody.savings, "alta");
   assert.equal(res.headers["Cache-Control"], "no-store");
 });
@@ -225,4 +226,19 @@ test("resumen de métricas por día y conversión", async () => {
   assert.equal(r.byDay["2026-11-24"].chat_complete, 1);
   assert.equal(r.conversion.startPerOpen, "50%");
   assert.equal(r.conversion.qualifiedPerComplete, "100%");
+});
+
+test("distribuidora por ZIP (Power to Choose): nombres cortos, varias, y falla sin bloquear el lead", async () => {
+  const { tduShortName, tdusFromPlans, lookupTdu } = await import("../api/src/lib/tdu.js");
+  assert.equal(tduShortName("ONCOR ELECTRIC DELIVERY COMPANY"), "Oncor");
+  assert.equal(tduShortName("TEXAS-NEW MEXICO POWER COMPANY"), "TNMP");
+  assert.equal(tduShortName("AEP TEXAS CENTRAL"), "AEP Central");
+  assert.deepEqual(tdusFromPlans([{ company_tdu_name: "CENTERPOINT ENERGY HOUSTON ELECTRIC LLC" }, { company_tdu_name: "TEXAS-NEW MEXICO POWER COMPANY" }]), ["CenterPoint", "TNMP"]);
+  assert.equal(await lookupTdu("12345", { fetchImpl: async () => { throw new TypeError("down"); } }), "");
+  assert.equal(await lookupTdu("abc"), "");
+  // Si Power to Choose falla, el lead se guarda igual (sin distribuidora).
+  const fetchImpl = fakeFetch([["script.google.com", sheetOk]]);
+  const res = await handleLead(request({ ...BODY, zipCode: "75201" }), { env: {}, fetchImpl, log: quiet, limiter: allowAll });
+  assert.equal(res.status, 200);
+  assert.doesNotMatch(fetchImpl.calls.find((c) => c.url.includes("script.google.com")).body.answers, /distribuidora/);
 });

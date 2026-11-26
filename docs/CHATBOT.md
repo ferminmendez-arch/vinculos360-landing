@@ -149,3 +149,30 @@ Versión de producción antes de este cambio: `main` en `f94a676`.
 | Azure Storage (Table) | **No creado. Requiere aprobación.** | Con decenas de leads y miles de eventos al mes: centavos al mes (menos de $1). |
 | Apps Script / Google Sheets | Existente | $0 |
 | IA / servicios de correo de pago | No se usan | $0 |
+
+## Comparación de tarifas e inscripción segura (agente de leads, nov. 2026)
+
+**Distribuidora por ZIP.** Cuando llega un lead de electricidad de Texas, la API consulta el servicio público de Power to Choose (PUCT) y guarda la distribuidora en *Answers* (`distribuidora=CenterPoint`). Si la consulta falla, el lead se guarda igual, sin ese dato.
+
+**Pestaña privada "Tarifas"** (la crea el agente):
+
+| Distribuidora | Plan | Plazo (meses) | ¢/kWh a 500 | ¢/kWh a 1000 | ¢/kWh a 2000 | Actualizado | Notas |
+|---|---|---|---|---|---|---|---|
+
+- El dueño la llena con los precios promedio de la hoja de datos (EFL) de cada plan, por distribuidora: CenterPoint, Oncor, AEP Central, AEP North, TNMP o Lubbock.
+- Acepta centavos (16.9) o dólares (0.169). Si solo hay precio a 2,000 kWh, usa ese.
+- Cuando el sitio del proveedor vuelva a estar disponible, se puede agregar un lector automático que llene esta pestaña.
+
+**En Seguimiento**, por cada lead de electricidad, el agente agrega:
+- *Distribuidora*;
+- *Precio actual* (factura ÷ kWh);
+- *Plan sugerido*: el más barato de esa distribuidora al consumo del cliente, interpolando 500/1,000/2,000 kWh;
+- *Precio plan*;
+- *Diferencia estimada ($/mes)*.
+
+El correo de aviso incluye esa línea, sin nombre ni teléfono. Nada de esto se muestra al visitante.
+
+**Inscripción segura.** En *Seguimiento* también aparecen dos columnas: *Mensaje inscripción* y *Abrir WhatsApp (inscripción)*.
+- El mensaje lleva el enlace oficial de inscripción con el ID de IBO: `https://acn.xoomenergy.com/en/?p=04893385`. Se puede cambiar con la propiedad del script `ENROLL_URL_ELECTRICIDAD`.
+- El cliente escribe su identificación y su SSN directamente en el sitio del proveedor: ni el sitio, ni la hoja, ni WhatsApp los reciben.
+- **El sitio y el chat nunca deben pedir SSN, identificación ni datos bancarios.**

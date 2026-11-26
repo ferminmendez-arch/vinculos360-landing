@@ -91,7 +91,7 @@ function cell(value) {
   return /^[=+\-@]/.test(s) ? `'${s}` : s;
 }
 
-export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons, savings = { level: "sin_datos" } }) {
+export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons, savings = { level: "sin_datos" }, tdu = "" }) {
   return {
     PartitionKey: receivedAt.slice(0, 7), // AAAA-MM
     RowKey: id,
@@ -110,6 +110,7 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons,
     Prequalified: prequalified,
     Reasons: reasons.join(","),
     SavingsLevel: savings.level,
+    Distribuidora: tdu,
     ...(savings.rateCents != null ? { RateCents: savings.rateCents } : {}),
     Source: cell(lead.source),
     Medium: cell(lead.medium),
@@ -124,7 +125,7 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons,
 /* Cuerpo para el receptor de Apps Script. Las 10 claves originales
    (name … device) son las que entiende el receptor actual; el resto
    solo se guarda cuando se instala el receptor v2. */
-export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = { level: "sin_datos" } }) {
+export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = { level: "sin_datos" }, tdu = "" }) {
   return {
     name: lead.name,
     phone: lead.phone,
@@ -145,7 +146,7 @@ export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = 
     consentVersion: lead.consentVersion,
     consentAt: receivedAt,
     qualification: prequalified ? "Precalificado" : "Revisar",
-    answers: answersSummary(lead.serviceKey, lead.answers),
+    answers: answersSummary(lead.serviceKey, lead.answers, { tdu }),
     chatLeadId: id,
   };
 }

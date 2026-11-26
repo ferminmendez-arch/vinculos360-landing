@@ -223,10 +223,11 @@ export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
 }
 
 /* Resumen compacto de respuestas para la hoja: "property=casa; decision=si". */
-export function answersSummary(serviceKey, answers = {}) {
+export function answersSummary(serviceKey, answers = {}, { tdu = "" } = {}) {
   const parts = (QUESTIONS[serviceKey] || []).filter((q) => answers[q.id]).map((q) => `${q.id}=${answers[q.id]}`);
   const est = savingsEstimate({ serviceKey, answers });
   if (est.level !== "sin_datos") parts.push(`precio_kwh=${est.rateCents}c`, `oportunidad=${est.level}`);
+  if (tdu) parts.push(`distribuidora=${String(tdu).replace(/[;=]/g, " ")}`);
   return parts.join("; ");
 }
 
