@@ -11,7 +11,7 @@ globalThis.localStorage = {
 beforeEach(() => store.clear());
 
 const flow = await import("../src/lib/chatbot/flow.js");
-const { CHAT_STRINGS } = await import("../src/lib/chatbot/strings.js");
+const { CHAT_STRINGS, resolveText } = await import("../src/lib/chatbot/strings.js");
 const { submitChatLead, toSheetPayload } = await import("../src/lib/chatbot/api.js");
 const { QUESTIONS, validateChatLead } = await import("../api/src/lib/rules.js");
 
@@ -119,8 +119,11 @@ test("todos los textos existen en español e inglés", () => {
     for (const [key, qs] of Object.entries(QUESTIONS)) {
       assert.ok(s.services[key], `${lang} servicio ${key}`);
       for (const q of qs) {
-        assert.ok(s.questions[q.id]?.text, `${lang} pregunta ${q.id}`);
-        for (const o of q.options) assert.ok(s.questions[q.id].options[o], `${lang} opción ${q.id}.${o}`);
+        for (const ctx of [{ property: "casa" }, { property: "negocio" }, {}]) {
+          assert.ok(resolveText(s.questions[q.id]?.text, ctx), `${lang} pregunta ${q.id}`);
+          const opts = resolveText(s.questions[q.id].options, ctx);
+          for (const o of q.options) assert.ok(opts[o], `${lang} opción ${q.id}.${o}`);
+        }
       }
     }
     for (const m of ["whatsapp", "llamada", "texto", "correo"]) {
@@ -137,13 +140,42 @@ test("los textos públicos del chat pasan el verificador de afirmaciones (sin pr
     // Los rangos de la factura ("Menos de $100") son opciones de respuesta, no afirmaciones.
     const { bill, ...questions } = s.questions;
     assert.ok(bill);
+    const contextual = [{ property: "casa" }, { property: "negocio" }].flatMap((ctx) => [
+      resolveText(s.zipQuestion, ctx),
+      ...Object.values(questions).flatMap((q) => [resolveText(q.text, ctx), ...Object.values(resolveText(q.options, ctx))]),
+      resolveText(bill.text, ctx),
+    ]);
     const text = [
       JSON.stringify({ ...s, questions }),
+      ...contextual,
       ...["whatsapp", "llamada", "texto", "correo"].flatMap((m) => [s.consentText(m), s.successText(m)]),
       s.whatsappMessage({ name: "Ana", service: s.services.electricidad, zipCode: "77001", method: "texto" }),
     ].join("\n");
     assert.deepEqual(lintText(text, { fileLabel: `chat-${lang}` }), []);
   }
+});
+
+test("si es para un negocio, las preguntas hablan del negocio y no del hogar", () => {
+  const ctx = { property: "negocio" };
+  const es = CHAT_STRINGS.es;
+  const en = CHAT_STRINGS.en;
+  assert.match(resolveText(es.questions.decision.text, ctx), /tu negocio/);
+  assert.doesNotMatch(resolveText(es.questions.decision.text, ctx), /hogar/);
+  assert.match(resolveText(es.zipQuestion, ctx), /tu negocio/);
+  assert.doesNotMatch(resolveText(es.questions.usage.text, ctx) + JSON.stringify(resolveText(es.questions.usage.options, ctx)), /casa|hogar/);
+  assert.match(resolveText(en.questions.decision.text, ctx), /your business/);
+  assert.match(resolveText(en.zipQuestion, ctx), /business/);
+  // En casa se mantiene el texto del hogar.
+  assert.match(resolveText(es.questions.decision.text, { property: "casa" }), /tu hogar/);
+  assert.match(resolveText(es.zipQuestion, {}), /tu casa/);
+});
+
+test("electricidad usa 'energía eléctrica', no 'luz'", () => {
+  const all = [{ property: "casa" }, { property: "negocio" }]
+    .flatMap((ctx) => ["bill", "contract"].map((id) => resolveText(CHAT_STRINGS.es.questions[id].text, ctx)))
+    .join(" ");
+  assert.match(all, /energía eléctrica/);
+  assert.doesNotMatch(all, /\bluz\b/i);
 });
 
 /* ---------- Envío ---------- */

@@ -8,6 +8,9 @@
 
 import { PHONE_DISPLAY } from "../../config.js";
 
+/* Algunas preguntas cambian si el servicio es para un negocio. */
+const isBusiness = (answers = {}) => answers.property === "negocio";
+
 const METHOD_ES = { whatsapp: "WhatsApp", llamada: "llamada", texto: "mensaje de texto", correo: "correo electrónico" };
 const METHOD_EN = { whatsapp: "WhatsApp", llamada: "phone call", texto: "text message", correo: "email" };
 
@@ -32,15 +35,15 @@ const es = {
   questions: {
     property: { text: "¿Es para tu casa o para un negocio?", options: { casa: "Para mi casa", negocio: "Para un negocio" } },
     decision: {
-      text: "¿Eres tú quien decide sobre este servicio en tu hogar?",
+      text: (a) => `¿Eres tú quien decide sobre este servicio en ${isBusiness(a) ? "tu negocio" : "tu hogar"}?`,
       options: { si: "Sí, yo decido", compartida: "Lo decido con alguien más", no: "No, decide otra persona" },
     },
     bill: {
-      text: "Aproximadamente, ¿cuánto pagas de luz al mes?",
+      text: (a) => `Aproximadamente, ¿cuánto paga${isBusiness(a) ? " tu negocio" : "s"} al mes de energía eléctrica?`,
       options: { menos100: "Menos de $100", "100a200": "Entre $100 y $200", mas200: "Más de $200", nose: "No estoy seguro" },
     },
     contract: {
-      text: "¿Tienes un contrato de luz vigente?",
+      text: (a) => `¿${isBusiness(a) ? "Tu negocio tiene" : "Tienes"} un contrato de energía eléctrica vigente?`,
       options: {
         sincontrato: "No / pago mes a mes",
         vencepronto: "Sí, vence en menos de 2 meses",
@@ -53,8 +56,11 @@ const es = {
       options: { sinservicio: "No tengo internet", mejorar: "Quiero mejor velocidad o precio", mudanza: "Me estoy mudando", otra: "Otra situación" },
     },
     usage: {
-      text: "¿Para qué usan más el internet en casa?",
-      options: { trabajo: "Trabajo o estudio desde casa", streaming: "Películas, series y juegos", basico: "Uso básico (redes, correo)" },
+      text: (a) => (isBusiness(a) ? "¿Para qué usan más el internet en tu negocio?" : "¿Para qué usan más el internet en casa?"),
+      options: (a) =>
+        isBusiness(a)
+          ? { trabajo: "Operación del negocio y cobros", streaming: "Videollamadas y contenido en línea", basico: "Uso básico (correo, redes)" }
+          : { trabajo: "Trabajo o estudio desde casa", streaming: "Películas, series y juegos", basico: "Uso básico (redes, correo)" },
     },
     housing: {
       text: "¿En qué tipo de vivienda vives?",
@@ -73,7 +79,7 @@ const es = {
       options: { movil: "Telefonía celular", fija: "Teléfono de casa", otro: "Otro servicio del hogar" },
     },
   },
-  zipQuestion: "¿Cuál es el ZIP Code de tu casa? Así revisamos qué opciones hay en tu zona.",
+  zipQuestion: (a) => `¿Cuál es el ZIP Code de ${isBusiness(a) ? "tu negocio" : "tu casa"}? Así revisamos qué opciones hay en tu zona.`,
   nameQuestion: "¿Cómo te llamas?",
   contactQuestion: (name) => `Gracias, ${name}. ¿Cómo prefieres que te contactemos?`,
   methods: { whatsapp: "WhatsApp", llamada: "Llamada", texto: "Mensaje de texto", correo: "Correo electrónico" },
@@ -144,15 +150,15 @@ const en = {
   questions: {
     property: { text: "Is it for your home or for a business?", options: { casa: "For my home", negocio: "For a business" } },
     decision: {
-      text: "Are you the one who decides on this service for your home?",
+      text: (a) => `Are you the one who decides on this service for ${isBusiness(a) ? "your business" : "your home"}?`,
       options: { si: "Yes, I decide", compartida: "I decide with someone else", no: "No, someone else decides" },
     },
     bill: {
-      text: "About how much is your monthly electric bill?",
+      text: (a) => `About how much is ${isBusiness(a) ? "your business's" : "your"} monthly electric bill?`,
       options: { menos100: "Less than $100", "100a200": "Between $100 and $200", mas200: "More than $200", nose: "Not sure" },
     },
     contract: {
-      text: "Do you currently have an electricity contract?",
+      text: (a) => (isBusiness(a) ? "Does your business currently have an electricity contract?" : "Do you currently have an electricity contract?"),
       options: {
         sincontrato: "No / month-to-month",
         vencepronto: "Yes, it ends in less than 2 months",
@@ -165,8 +171,11 @@ const en = {
       options: { sinservicio: "I don't have internet", mejorar: "I want better speed or price", mudanza: "I'm moving", otra: "Something else" },
     },
     usage: {
-      text: "What do you use the internet for most at home?",
-      options: { trabajo: "Working or studying from home", streaming: "Movies, shows and gaming", basico: "Basic use (social media, email)" },
+      text: (a) => (isBusiness(a) ? "What does your business use the internet for most?" : "What do you use the internet for most at home?"),
+      options: (a) =>
+        isBusiness(a)
+          ? { trabajo: "Running the business and payments", streaming: "Video calls and online content", basico: "Basic use (email, social media)" }
+          : { trabajo: "Working or studying from home", streaming: "Movies, shows and gaming", basico: "Basic use (social media, email)" },
     },
     housing: {
       text: "What type of home do you live in?",
@@ -185,7 +194,7 @@ const en = {
       options: { movil: "Cell phone service", fija: "Home phone", otro: "Another home service" },
     },
   },
-  zipQuestion: "What's your home ZIP Code? That way we can check the options in your area.",
+  zipQuestion: (a) => `What's ${isBusiness(a) ? "your business's" : "your home"} ZIP Code? That way we can check the options in your area.`,
   nameQuestion: "What's your name?",
   contactQuestion: (name) => `Thanks, ${name}. How would you prefer we contact you?`,
   methods: { whatsapp: "WhatsApp", llamada: "Phone call", texto: "Text message", correo: "Email" },
@@ -236,3 +245,8 @@ const en = {
 };
 
 export const CHAT_STRINGS = { es, en };
+
+/* Texto de una pregunta (o del ZIP) según las respuestas anteriores. */
+export function resolveText(value, answers = {}) {
+  return typeof value === "function" ? value(answers) : value;
+}

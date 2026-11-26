@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CircleAlert, CircleCheck, LoaderCircle, MessageCircle, RotateCcw, RotateCw, Send, X } from "lucide-react";
-import { CHAT_STRINGS } from "../lib/chatbot/strings.js";
+import { CHAT_STRINGS, resolveText } from "../lib/chatbot/strings.js";
 import {
   INITIAL_STATE,
   answer,
@@ -22,8 +22,8 @@ import { digitsOnly, formatUsPhone } from "../lib/validation.js";
 
 function questionText(s, state, stepId) {
   if (stepId === "service") return s.serviceQuestion;
-  if (stepId.startsWith("q:")) return s.questions[stepId.slice(2)].text;
-  if (stepId === "zipCode") return s.zipQuestion;
+  if (stepId.startsWith("q:")) return resolveText(s.questions[stepId.slice(2)].text, state.answers);
+  if (stepId === "zipCode") return resolveText(s.zipQuestion, state.answers);
   if (stepId === "name") return s.nameQuestion;
   if (stepId === "preferredContact") return s.contactQuestion(state.name);
   if (stepId === "phone") return s.phoneQuestion(state.preferredContact);
@@ -32,16 +32,16 @@ function questionText(s, state, stepId) {
   return "";
 }
 
-function optionLabel(s, stepId, value) {
+function optionLabel(s, state, stepId, value) {
   if (stepId === "service") return s.services[value];
-  if (stepId.startsWith("q:")) return s.questions[stepId.slice(2)].options[value];
+  if (stepId.startsWith("q:")) return resolveText(s.questions[stepId.slice(2)].options, state.answers)[value];
   if (stepId === "preferredContact") return s.methods[value];
   return value;
 }
 
 function answerLabel(s, state, step) {
   const value = valueOf(state, step.id);
-  return step.kind === "choice" ? optionLabel(s, step.id, value) : value;
+  return step.kind === "choice" ? optionLabel(s, state, step.id, value) : value;
 }
 
 const INPUTS = {
@@ -295,7 +295,7 @@ export default function ChatPanel({ open, onClose, lang }) {
                 onClick={() => choose(value)}
                 className="rounded-full border-2 border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 transition-colors hover:border-brand-600 hover:bg-brand-50"
               >
-                {optionLabel(s, step.id, value)}
+                {optionLabel(s, state, step.id, value)}
               </button>
             ))}
           </div>
