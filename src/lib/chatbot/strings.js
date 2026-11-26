@@ -21,6 +21,9 @@ const METHOD_EN = { whatsapp: "WhatsApp", llamada: "phone call", texto: "text me
 const es = {
   launcher: "Habla con nosotros",
   launcherShort: "Chat",
+  teaserTitle: "¿Te ayudo a revisar tus opciones?",
+  teaserText: "Toma menos de 2 minutos.",
+  teaserDismiss: "Cerrar mensaje",
   title: "Asistente de Vínculos 360",
   subtitle: "Toma menos de 2 minutos",
   close: "Cerrar chat",
@@ -187,6 +190,9 @@ const es = {
 const en = {
   launcher: "Chat with us",
   launcherShort: "Chat",
+  teaserTitle: "Can I help you review your options?",
+  teaserText: "It takes less than 2 minutes.",
+  teaserDismiss: "Close message",
   title: "Vínculos 360 Assistant",
   subtitle: "Takes less than 2 minutes",
   close: "Close chat",
