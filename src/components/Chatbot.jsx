@@ -8,11 +8,17 @@ import { trackChatEvent } from "../lib/chatbot/api.js";
    para no aumentar el peso inicial de la página. */
 const ChatPanel = lazy(() => import("./ChatPanel.jsx"));
 
+/* vinculos360.com/?chat=1 abre el chat al cargar la página (por ejemplo, desde WhatsApp). */
+function chatRequestedInUrl() {
+  if (typeof window === "undefined") return false;
+  return ["1", "abrir", "open"].includes(new URLSearchParams(window.location.search).get("chat"));
+}
+
 export default function Chatbot() {
   const lang = useLang();
   const s = CHAT_STRINGS[lang] || CHAT_STRINGS.es;
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(chatRequestedInUrl);
+  const [mounted, setMounted] = useState(chatRequestedInUrl);
   const launcherRef = useRef(null);
   const openedOnce = useRef(false);
 
@@ -24,6 +30,14 @@ export default function Chatbot() {
       trackChatEvent("chat_open", { language: lang });
     }
   }, [lang]);
+
+  // Si el chat se abrió desde el enlace, cuenta la apertura una sola vez.
+  useEffect(() => {
+    if (open && !openedOnce.current) {
+      openedOnce.current = true;
+      trackChatEvent("chat_open", { language: lang });
+    }
+  }, [open, lang]);
 
   // Otros elementos del sitio (por ejemplo, la tarjeta "En línea" del inicio) abren el chat con este evento.
   useEffect(() => {
