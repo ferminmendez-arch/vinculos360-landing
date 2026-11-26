@@ -13,7 +13,7 @@ import { TX_RESIDENTIAL_AVG } from "../../../api/src/lib/rules.js";
 const fmt = (n) => Number(n).toFixed(1);
 
 /* Algunas preguntas cambian si el servicio es para un negocio. */
-const isBusiness = (answers = {}) => answers.property === "negocio" || answers.housing === "negocio";
+const isBusiness = (answers = {}) => answers.property === "negocio" || answers.housing === "negocio" || Boolean(answers.businessType);
 
 const METHOD_ES = { whatsapp: "WhatsApp", llamada: "llamada", texto: "mensaje de texto", correo: "correo electrónico" };
 const METHOD_EN = { whatsapp: "WhatsApp", llamada: "phone call", texto: "text message", correo: "email" };
@@ -34,6 +34,10 @@ const es = {
     electricidad: "Electricidad y ahorro",
     internet: "Internet",
     seguridad: "Seguridad y monitoreo",
+    television: "Televisión",
+    celular: "Telefonía celular",
+    identidad: "Protección de identidad",
+    pagos: "Pagos con tarjeta (negocios)",
     otros: "Otros servicios",
   },
   questions: {
@@ -87,7 +91,35 @@ const es = {
     },
     otherType: {
       text: "¿Qué otro servicio te interesa?",
-      options: { movil: "Telefonía celular", fija: "Teléfono de casa", otro: "Otro servicio" },
+      options: { fija: "Teléfono fijo", otro: "Otro servicio" },
+    },
+    tvCurrent: {
+      text: "¿Qué usas hoy para ver TV?",
+      options: { cable: "Cable", satelite: "Satélite", streaming: "Solo streaming (apps)", ninguno: "Nada por ahora" },
+    },
+    lines: {
+      text: "¿Cuántas líneas de celular necesitas?",
+      options: { una: "1 línea", dosatres: "2 a 3 líneas", cuatromas: "4 o más" },
+    },
+    phonePlan: {
+      text: "¿Qué tipo de plan tienes hoy?",
+      options: { prepago: "Prepago", contrato: "Plan mensual o contrato", sinservicio: "No tengo servicio" },
+    },
+    coverage: {
+      text: "¿Para quién sería la protección?",
+      options: { solo: "Solo para mí", pareja: "Para mí y mi pareja", familia: "Para mi familia" },
+    },
+    businessType: {
+      text: "¿Qué tipo de negocio tienes?",
+      options: { restaurante: "Restaurante o comida", tienda: "Tienda", servicios: "Servicios", otro: "Otro" },
+    },
+    cardVolume: {
+      text: "Aproximadamente, ¿cuánto vende tu negocio con tarjeta al mes?",
+      options: { menos5k: "Menos de $5,000", "5ka20k": "$5,000 a $20,000", mas20k: "Más de $20,000", nose: "No estoy seguro" },
+    },
+    currentPayments: {
+      text: "¿Hoy ya aceptas pagos con tarjeta?",
+      options: { tiene: "Sí, ya acepto tarjetas", notiene: "Todavía no" },
     },
   },
   skipNumber: "No lo sé",
@@ -168,6 +200,10 @@ const en = {
     electricidad: "Electricity & savings",
     internet: "Internet",
     seguridad: "Security & monitoring",
+    television: "Television",
+    celular: "Mobile phone",
+    identidad: "Identity protection",
+    pagos: "Card payments (businesses)",
     otros: "Other services",
   },
   questions: {
@@ -220,7 +256,35 @@ const en = {
     },
     otherType: {
       text: "Which other service are you interested in?",
-      options: { movil: "Cell phone service", fija: "Home phone", otro: "Another service" },
+      options: { fija: "Landline phone", otro: "Another service" },
+    },
+    tvCurrent: {
+      text: "What do you use to watch TV today?",
+      options: { cable: "Cable", satelite: "Satellite", streaming: "Streaming apps only", ninguno: "Nothing right now" },
+    },
+    lines: {
+      text: "How many phone lines do you need?",
+      options: { una: "1 line", dosatres: "2 to 3 lines", cuatromas: "4 or more" },
+    },
+    phonePlan: {
+      text: "What kind of plan do you have today?",
+      options: { prepago: "Prepaid", contrato: "Monthly plan or contract", sinservicio: "No service" },
+    },
+    coverage: {
+      text: "Who would the protection be for?",
+      options: { solo: "Just me", pareja: "Me and my partner", familia: "My family" },
+    },
+    businessType: {
+      text: "What type of business do you have?",
+      options: { restaurante: "Restaurant or food", tienda: "Retail store", servicios: "Services", otro: "Other" },
+    },
+    cardVolume: {
+      text: "About how much does your business sell by card each month?",
+      options: { menos5k: "Less than $5,000", "5ka20k": "$5,000 to $20,000", mas20k: "More than $20,000", nose: "Not sure" },
+    },
+    currentPayments: {
+      text: "Do you already accept card payments?",
+      options: { tiene: "Yes, I accept cards", notiene: "Not yet" },
     },
   },
   skipNumber: "I don't know",

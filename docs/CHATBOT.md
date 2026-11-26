@@ -74,7 +74,7 @@ Todas son opcionales. Sin ninguna, la API guarda en la hoja actual.
 | `LEADS_SHEET_ENDPOINT` | receptor de producción | Apuntar a una hoja de pruebas. |
 | `LEADS_TABLE_SAS_URL` | (vacío) | Guardar también en Azure Table (SAS de tabla, `sp=a`). |
 | `EVENTS_TABLE_SAS_URL` | (vacío) | Métricas en Azure Table (SAS de tabla, `sp=a`). |
-| `CHAT_EVENTS_TO_SHEET` | `false` | `true` cuando el receptor v2 esté instalado: métricas en la pestaña *Chatbot*. |
+| `CHAT_EVENTS_TO_SHEET` | `true` | Métricas en la pestaña *Chatbot* (receptor v2, instalado el 26 nov 2026). `false` las apaga. |
 | `ALLOWED_ORIGINS` | (vacío) | Orígenes extra separados por comas. |
 
 ## Notificaciones por correo (sin costo)
@@ -96,7 +96,7 @@ En la columna *Device* aparecen como `Mobile · Chatbot`. Si quieres avisos más
 | Precalificadas | `chat_qualified` | Completada y precalificada |
 
 Dónde verlas (elige una):
-1. **Sin costo:** instala el receptor v2 y pon `CHAT_EVENTS_TO_SHEET=true` → pestaña **Chatbot** de la hoja, una fila por día.
+1. **Sin costo (activo):** pestaña **Chatbot** de la hoja, una fila por día (receptor v2).
 2. **Azure Table** (si se aprueba): `EVENTS_TABLE_SAS_URL` y `node automation/chatbot/metrics.mjs 30`.
 
 Si hay Google Tag Manager, también se envían a `dataLayer`. El píxel de Meta (si existe) recibe `Lead` al completar.
@@ -116,7 +116,7 @@ Si hay Google Tag Manager, también se envían a `dataLayer`. El píxel de Meta 
    3. guarda;
    4. ejecuta `setupLeadsSheet()` una vez: agrega 10 columnas a la derecha de *LeadId* y crea la pestaña *Chatbot*;
    5. en Implementar → Administrar implementaciones → editar la implementación **existente**, elige *Versión nueva*. Así el `/exec` no cambia.
-   6. Después pon `CHAT_EVENTS_TO_SHEET=true` en Azure.
+   6. Las métricas a la hoja ya están activas por defecto (`CHAT_EVENTS_TO_SHEET`).
 5. **Azure Table Storage (opcional, requiere aprobación porque es un recurso con costo):**
    1. crea una cuenta de almacenamiento Standard LRS en Central US;
    2. crea las tablas `chatleads` y `chatevents`;
@@ -149,3 +149,30 @@ Versión de producción antes de este cambio: `main` en `f94a676`.
 | Azure Storage (Table) | **No creado. Requiere aprobación.** | Con decenas de leads y miles de eventos al mes: centavos al mes (menos de $1). |
 | Apps Script / Google Sheets | Existente | $0 |
 | IA / servicios de correo de pago | No se usan | $0 |
+
+## Comparación de tarifas e inscripción segura (agente de leads, nov. 2026)
+
+**Distribuidora por ZIP.** Cuando llega un lead de electricidad de Texas, la API consulta el servicio público de Power to Choose (PUCT) y guarda la distribuidora en *Answers* (`distribuidora=CenterPoint`). Si la consulta falla, el lead se guarda igual, sin ese dato.
+
+**Pestaña privada "Tarifas"** (la crea el agente):
+
+| Distribuidora | Plan | Plazo (meses) | ¢/kWh a 500 | ¢/kWh a 1000 | ¢/kWh a 2000 | Actualizado | Notas |
+|---|---|---|---|---|---|---|---|
+
+- El dueño la llena con los precios promedio de la hoja de datos (EFL) de cada plan, por distribuidora: CenterPoint, Oncor, AEP Central, AEP North, TNMP o Lubbock.
+- Acepta centavos (16.9) o dólares (0.169). Si solo hay precio a 2,000 kWh, usa ese.
+- Cuando el sitio del proveedor vuelva a estar disponible, se puede agregar un lector automático que llene esta pestaña.
+
+**En Seguimiento**, por cada lead de electricidad, el agente agrega:
+- *Distribuidora*;
+- *Precio actual* (factura ÷ kWh);
+- *Plan sugerido*: el más barato de esa distribuidora al consumo del cliente, interpolando 500/1,000/2,000 kWh;
+- *Precio plan*;
+- *Diferencia estimada ($/mes)*.
+
+El correo de aviso incluye esa línea, sin nombre ni teléfono. Nada de esto se muestra al visitante.
+
+**Inscripción segura.** En *Seguimiento* también aparecen dos columnas: *Mensaje inscripción* y *Abrir WhatsApp (inscripción)*.
+- El mensaje lleva el enlace oficial de inscripción con el ID de IBO: `https://acn.xoomenergy.com/en/?p=04893385`. Se puede cambiar con la propiedad del script `ENROLL_URL_ELECTRICIDAD`.
+- El cliente escribe su identificación y su SSN directamente en el sitio del proveedor: ni el sitio, ni la hoja, ni WhatsApp los reciben.
+- **El sitio y el chat nunca deben pedir SSN, identificación ni datos bancarios.**

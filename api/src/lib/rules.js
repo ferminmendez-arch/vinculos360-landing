@@ -15,6 +15,10 @@ export const SERVICE_VALUES = {
   electricidad: "Electricidad",
   internet: "Internet",
   seguridad: "Seguridad y monitoreo",
+  television: "Televisión",
+  celular: "Telefonía celular",
+  identidad: "Protección de identidad",
+  pagos: "Procesamiento de pagos",
   otros: "Otros servicios",
 };
 
@@ -42,8 +46,29 @@ export const QUESTIONS = {
     { id: "timeline", options: ["pronto", "1a3meses", "explorando"] },
     { id: "decision", options: ["si", "compartida", "no"] },
   ],
+  television: [
+    { id: "property", options: ["casa", "negocio"] },
+    { id: "tvCurrent", options: ["cable", "satelite", "streaming", "ninguno"] },
+    { id: "decision", options: ["si", "compartida", "no"] },
+  ],
+  celular: [
+    { id: "lines", options: ["una", "dosatres", "cuatromas"] },
+    { id: "phonePlan", options: ["prepago", "contrato", "sinservicio"] },
+    { id: "decision", options: ["si", "compartida", "no"] },
+  ],
+  identidad: [
+    { id: "coverage", options: ["solo", "pareja", "familia"] },
+    { id: "decision", options: ["si", "compartida", "no"] },
+  ],
+  // Solo para negocios.
+  pagos: [
+    { id: "businessType", options: ["restaurante", "tienda", "servicios", "otro"] },
+    { id: "cardVolume", options: ["menos5k", "5ka20k", "mas20k", "nose"] },
+    { id: "currentPayments", options: ["tiene", "notiene"] },
+    { id: "decision", options: ["si", "compartida", "no"] },
+  ],
   otros: [
-    { id: "otherType", options: ["movil", "fija", "otro"] },
+    { id: "otherType", options: ["fija", "otro"] },
     { id: "property", options: ["casa", "negocio"] },
     { id: "decision", options: ["si", "compartida", "no"] },
   ],
@@ -182,13 +207,13 @@ export function isLikelyNoChoiceZip(zip) {
 
 /* ---------- Precalificación ----------
    "Precalificado" = vale la pena contactar ya. No sustituye al estado
-   "Calificado" que el dueño pone en la pestaña Seguimiento. */
+   "Calificado" que el dueño pone en la pestaña Seguimiento.
+   Desde nov. 2026 los negocios también cuentan (decisión del dueño). */
 
 export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
   const reasons = [];
   if (!consent) reasons.push("sin_consentimiento");
   if (answers.decision === "no") reasons.push("no_decide");
-  if (answers.property === "negocio" || answers.housing === "negocio") reasons.push("negocio");
   if (serviceKey === "electricidad") {
     if (!isTexasZip(zipCode)) reasons.push("fuera_de_texas");
     else if (isLikelyNoChoiceZip(zipCode)) reasons.push("zona_sin_opcion_probable");
@@ -198,10 +223,11 @@ export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
 }
 
 /* Resumen compacto de respuestas para la hoja: "property=casa; decision=si". */
-export function answersSummary(serviceKey, answers = {}) {
+export function answersSummary(serviceKey, answers = {}, { tdu = "" } = {}) {
   const parts = (QUESTIONS[serviceKey] || []).filter((q) => answers[q.id]).map((q) => `${q.id}=${answers[q.id]}`);
   const est = savingsEstimate({ serviceKey, answers });
   if (est.level !== "sin_datos") parts.push(`precio_kwh=${est.rateCents}c`, `oportunidad=${est.level}`);
+  if (tdu) parts.push(`distribuidora=${String(tdu).replace(/[;=]/g, " ")}`);
   return parts.join("; ");
 }
 

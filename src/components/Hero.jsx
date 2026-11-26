@@ -82,13 +82,15 @@ export default function Hero() {
             />
           </picture>
 
-          {/* Tarjeta: conversación por WhatsApp */}
-          <div
-            aria-hidden="true"
-            className="animate-float-soft absolute bottom-0 left-2 flex max-w-[16.5rem] items-start gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-xl shadow-brand-950/15 backdrop-blur sm:-left-2 sm:bottom-2 sm:max-w-[17rem] sm:p-4"
+          {/* Tarjeta "Vínculos 360 · En línea": abre el chat del sitio */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("v360:open-chat"))}
+            aria-label={t.hero.chatOpen}
+            className="animate-float-soft absolute bottom-0 left-2 flex max-w-[16.5rem] cursor-pointer items-start gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 text-left shadow-xl shadow-brand-950/15 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white hover:shadow-2xl focus-visible:ring-4 focus-visible:ring-brand-200 focus-visible:outline-none sm:-left-2 sm:bottom-2 sm:max-w-[17rem] sm:p-4"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wa-600 text-white">
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="min-w-0">
               <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
@@ -98,7 +100,7 @@ export default function Hero() {
               </span>
               <span className="mt-1 block text-sm leading-snug text-slate-700">{t.hero.chatMessage}</span>
             </span>
-          </div>
+          </button>
         </div>
       </div>
     </section>

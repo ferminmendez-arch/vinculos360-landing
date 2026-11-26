@@ -9,7 +9,8 @@
 ========================================================= */
 
 import { randomUUID } from "node:crypto";
-import { validateChatLead, validateEvent } from "./rules.js";
+import { isTexasZip, validateChatLead, validateEvent } from "./rules.js";
+import { lookupTdu } from "./tdu.js";
 import { insertTableEntity, leadToSheetBody, leadToTableEntity, postToSheet, readConfig } from "./sinks.js";
 
 export const MAX_BODY_BYTES = 8 * 1024;
@@ -99,7 +100,9 @@ export async function handleLead(request, { env = process.env, fetchImpl = fetch
   const { lead, prequalified, reasons, savings } = checked;
   const id = randomUUID();
   const receivedAt = now().toISOString();
-  const meta = { id, receivedAt, prequalified, reasons, savings };
+  // Distribuidora (solo electricidad en Texas). Si falla, el lead se guarda igual.
+  const tdu = lead.serviceKey === "electricidad" && isTexasZip(lead.zipCode) ? await lookupTdu(lead.zipCode, { fetchImpl }) : "";
+  const meta = { id, receivedAt, prequalified, reasons, savings, tdu };
 
   const tasks = [];
   if (config.leadsTableSasUrl) {

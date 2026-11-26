@@ -236,3 +236,88 @@ test("estados de inscripción: cuentan como calificados e 'Inscrito' suma a insc
   assert.equal(m.enrolled, 1);
   assert.match(e.sheet("Panel").values.map((r) => r.join(" | ")).join("\n"), /Inscritos \(clientes dados de alta\) \| 1/);
 });
+
+/* ---------- Comparación con la pestaña Tarifas y paso de inscripción (nov. 2026) ---------- */
+
+const V2_HEAD = ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Source", "Medium", "Campaign", "Ad", "Fbclid", "Device", "LeadId",
+  "Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId"];
+const TARIFAS = [
+  ["Distribuidora", "Plan", "Plazo (meses)", "¢/kWh a 500", "¢/kWh a 1000", "¢/kWh a 2000", "Actualizado", "Notas"],
+  ["CenterPoint", "SureLock 12", 12, 19.8, 17.6, 16.4, "2026-11-26", ""],
+  ["CenterPoint", "SureLock 18", 18, 0.192, 0.171, 0.162, "2026-11-26", "en dólares también se acepta"],
+  ["Oncor", "SureLock 18", 18, "", "", 16.9, "2026-11-26", ""],
+];
+function chatRow(name, phone, zip, answers) {
+  return ["2026-12-01T15:00:00Z", name, phone, zip, "Electricidad", "Direct", "", "", "", "", "Mobile · Chatbot · Ahorro: alta", "id",
+    "chatbot", "es", "", "whatsapp", "sí", "2026-11-v1", "", "Precalificado", answers, "c1"];
+}
+
+test("lee Tarifas (centavos o dólares) e interpola el precio al consumo del cliente", () => {
+  const e = env();
+  const tariffs = e.gas.v360ReadTariffs(TARIFAS);
+  assert.equal(tariffs.length, 3);
+  assert.equal(tariffs[1].p1000, 17.1);
+  assert.equal(e.gas.v360PlanPriceAt(tariffs[0], 1000), 17.6);
+  assert.equal(e.gas.v360PlanPriceAt(tariffs[0], 1500), 17);
+  assert.equal(e.gas.v360PlanPriceAt(tariffs[0], 300), 19.8);
+  assert.equal(e.gas.v360PlanPriceAt(tariffs[2], 1000), 16.9, "si solo hay precio a 2,000 kWh, usa ese");
+});
+
+test("sugiere el plan más barato de la distribuidora y estima la diferencia mensual", () => {
+  const e = env();
+  const tariffs = e.gas.v360ReadTariffs(TARIFAS);
+  const lead = { service: "Electricidad", answers: e.gas.v360ParseAnswers("bill=200; kwh=1000; distribuidora=CenterPoint") };
+  const s = e.gas.v360SuggestPlan(lead, tariffs);
+  assert.equal(s.tdu, "CenterPoint");
+  assert.equal(s.currentCents, 20);
+  assert.equal(s.planName, "SureLock 18 (18 meses)");
+  assert.equal(s.planCents, 17.1);
+  assert.equal(s.monthlyDiff, 29);
+  assert.match(e.gas.v360SuggestionLine(s), /paga 20¢\/kWh · SureLock 18 \(18 meses\) a 17.1¢ · ahorro estimado ~\$29\/mes/);
+  // Sin datos suficientes no inventa nada.
+  assert.equal(e.gas.v360SuggestPlan({ service: "Electricidad", answers: e.gas.v360ParseAnswers("bill=nose; distribuidora=Oncor") }, tariffs).planName, undefined);
+  assert.equal(e.gas.v360SuggestPlan({ service: "Electricidad", answers: e.gas.v360ParseAnswers("bill=200; kwh=1000; distribuidora=CenterPoint o TNMP") }, tariffs).planName, undefined, "ZIP con dos distribuidoras: verificar a mano");
+  assert.deepEqual({ ...e.gas.v360SuggestPlan({ service: "Internet", answers: {} }, tariffs) }, {});
+});
+
+test("Seguimiento: agrega las columnas nuevas a una pestaña existente, compara y prepara el mensaje de inscripción", () => {
+  const oldHead = [...e0().gas.V360.TRACKING_HEADERS.slice(0, 20)];
+  const e = env({
+    sheets: {
+      Leads: toSheetValues([V2_HEAD, chatRow("Laura Gómez", "7134440123", "77494", "property=casa; decision=si; bill=200; kwh=1000; contract=sincontrato; distribuidora=CenterPoint")]),
+      Seguimiento: [oldHead],
+      Tarifas: TARIFAS,
+    },
+  });
+  e.gas.processNewLeads();
+  const [head] = e.sheet("Seguimiento").values;
+  assert.deepEqual([...head.slice(0, 20)], oldHead, "no mueve las columnas existentes");
+  const [row] = trackingRows(e);
+  assert.equal(row["Distribuidora"], "CenterPoint");
+  assert.equal(row["Precio actual (¢/kWh)"], 20);
+  assert.equal(row["Plan sugerido"], "SureLock 18 (18 meses)");
+  assert.equal(row["Diferencia estimada ($/mes)"], 29);
+  assert.match(row["Mensaje inscripción"], /acn\.xoomenergy\.com\/en\/\?p=04893385/);
+  assert.match(row["Mensaje inscripción"], /nosotros no los vemos ni los guardamos/);
+  assert.match(row["Abrir WhatsApp (inscripción)"], /^https:\/\/wa\.me\/17134440123\?text=/);
+  // El correo trae la comparación, sin nombre ni teléfono.
+  const body = e.emails[0].htmlBody;
+  assert.match(body, /ahorro estimado ~\$29\/mes/);
+  assert.doesNotMatch(body, /Laura|7134440123/);
+});
+
+test("el mensaje de inscripción usa la propiedad ENROLL_URL_ELECTRICIDAD y no se prepara para otros servicios", () => {
+  const e = env({
+    props: { ENROLL_URL_ELECTRICIDAD: "https://ejemplo.test/inscribir" },
+    sheets: { Leads: toSheetValues([V2_HEAD, chatRow("Laura Gómez", "7134440123", "77494", "bill=nose")]) },
+  });
+  e.gas.processNewLeads();
+  assert.match(trackingRows(e)[0]["Mensaje inscripción"], /ejemplo\.test\/inscribir/);
+  const e2 = env({ sheets: { Leads: toSheetValues([V2_HEAD, [...chatRow("Luis Pérez", "7134440124", "77494", "").slice(0, 4), "Internet", ...chatRow("x", "1", "1", "").slice(5)]]) } });
+  e2.gas.processNewLeads();
+  assert.equal(trackingRows(e2)[0]["Mensaje inscripción"], "");
+});
+
+function e0() {
+  return env();
+}

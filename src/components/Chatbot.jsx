@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { MessageCircleMore, X } from "lucide-react";
 import { useLang } from "../i18n.js";
 import { CHAT_STRINGS } from "../lib/chatbot/strings.js";
@@ -16,14 +16,20 @@ export default function Chatbot() {
   const launcherRef = useRef(null);
   const openedOnce = useRef(false);
 
-  const openChat = () => {
+  const openChat = useCallback(() => {
     setMounted(true);
     setOpen(true);
     if (!openedOnce.current) {
       openedOnce.current = true;
       trackChatEvent("chat_open", { language: lang });
     }
-  };
+  }, [lang]);
+
+  // Otros elementos del sitio (por ejemplo, la tarjeta "En línea" del inicio) abren el chat con este evento.
+  useEffect(() => {
+    window.addEventListener("v360:open-chat", openChat);
+    return () => window.removeEventListener("v360:open-chat", openChat);
+  }, [openChat]);
 
   const closeChat = useCallback(() => {
     setOpen(false);

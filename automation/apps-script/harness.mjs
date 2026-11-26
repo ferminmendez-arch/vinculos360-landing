@@ -58,6 +58,8 @@ class MockSheet {
     };
   }
   getLastRow() { return this.values.length; }
+  getLastColumn() { return this.values.reduce((m, r) => Math.max(m, r.length), 0); }
+  getMaxRows() { return Math.max(1000, this.values.length); }
   getRange(row, col, numRows, numCols) { return new MockRange(this, row, col, numRows, numCols); }
   appendRow(row) { this.values.push([...row]); return this; }
   setFrozenRows() { return this; }

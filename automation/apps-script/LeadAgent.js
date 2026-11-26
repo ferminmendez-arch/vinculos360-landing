@@ -34,7 +34,7 @@
 ========================================================= */
 
 var V360 = {
-  SHEETS: { leads: "Leads", tracking: "Seguimiento", panel: "Panel", weekly: "Semanal", spend: "Gastos", log: "Registro" },
+  SHEETS: { leads: "Leads", tracking: "Seguimiento", panel: "Panel", weekly: "Semanal", spend: "Gastos", log: "Registro", tariffs: "Tarifas" },
   WHATSAPP_BUSINESS: "12818257327",
   DUPLICATE_WINDOW_DAYS: 30,
   LOG_MAX_ROWS: 1000,
@@ -43,7 +43,17 @@ var V360 = {
     "Clave", "Recibido", "Nombre", "Teléfono", "ZIP", "Servicio", "Origen", "Medio", "Campaña",
     "Contenido/anuncio", "Prioridad", "Clasificación", "Motivo", "Duplicado de", "Estado",
     "Próximo paso", "Notas", "Borrador WhatsApp", "Abrir WhatsApp", "Agregado",
+    // Comparación de electricidad y paso de inscripción (nov. 2026). Van al final para no mover columnas.
+    "Distribuidora", "Precio actual (¢/kWh)", "Plan sugerido", "Precio plan (¢/kWh)", "Diferencia estimada ($/mes)",
+    "Mensaje inscripción", "Abrir WhatsApp (inscripción)",
   ],
+  /* Pestaña privada que llena el dueño con las tarifas de su proveedor por distribuidora
+     (precio promedio de la hoja de datos/EFL a 500, 1,000 y 2,000 kWh, en centavos). */
+  TARIFF_HEADERS: ["Distribuidora", "Plan", "Plazo (meses)", "¢/kWh a 500", "¢/kWh a 1000", "¢/kWh a 2000", "Actualizado", "Notas"],
+  TDUS: ["CenterPoint", "Oncor", "AEP Central", "AEP North", "TNMP", "Lubbock"],
+  /* Enlace oficial de inscripción con el ID de IBO (propiedad ENROLL_URL_ELECTRICIDAD para cambiarlo). */
+  ENROLL_URL_ELECTRICIDAD: "https://acn.xoomenergy.com/en/?p=04893385",
+  IBO_ID: "04893385",
   SPEND_HEADERS: ["Fecha", "Plataforma", "Campaña", "Monto USD", "Nota"],
   WEEKLY_HEADERS: ["Semana que termina", "Leads válidos", "Electricidad TX", "Calificados", "Gasto USD", "Costo por lead", "Costo por calificado"],
   STATUSES: ["Nuevo", "Contactado", "Calificado", "Inscripción en proceso", "Inscrito", "No calificado", "Cliente", "Sin respuesta", "No contactar", "Duplicado", "Prueba"],
@@ -64,6 +74,7 @@ var V360 = {
     ad: ["ad", "utm_content", "anuncio", "content", "contenido"],
     fbclid: ["fbclid"],
     device: ["device", "dispositivo"],
+    answers: ["answers", "respuestas"],
   },
 };
 
@@ -145,6 +156,7 @@ function v360ReadLeads(values) {
       campaign: String(get(row, "campaign") || "").trim(),
       ad: String(get(row, "ad") || "").trim(),
       device: String(get(row, "device") || "").trim(),
+      answers: v360ParseAnswers(get(row, "answers")),
     });
   }
   return leads;
@@ -227,6 +239,94 @@ function v360ClassifyLeads(leads) {
   });
 }
 
+/* "bill=120; kwh=1000; distribuidora=CenterPoint" → { bill: "120", kwh: "1000", distribuidora: "CenterPoint" } */
+function v360ParseAnswers(value) {
+  var out = {};
+  String(value == null ? "" : value).split(";").forEach(function (part) {
+    var i = part.indexOf("=");
+    if (i > 0) out[part.slice(0, i).trim()] = part.slice(i + 1).trim();
+  });
+  return out;
+}
+
+function v360Num(value) {
+  var n = Number(String(value == null ? "" : value).replace(/[$,¢c\s]/g, ""));
+  return isFinite(n) && n > 0 ? n : null;
+}
+
+/* Lee la pestaña Tarifas. Acepta precios en centavos (16.9) o en dólares (0.169). */
+function v360ReadTariffs(values) {
+  if (!values || values.length < 2) return [];
+  var cents = function (v) {
+    var n = v360Num(v);
+    if (n === null) return null;
+    return n < 1 ? n * 100 : n;
+  };
+  var out = [];
+  for (var r = 1; r < values.length; r++) {
+    var row = values[r];
+    var tdu = String(row[0] || "").trim();
+    var plan = String(row[1] || "").trim();
+    if (!tdu || !plan) continue;
+    var p = { tdu: tdu, plan: plan, term: v360Num(row[2]), p500: cents(row[3]), p1000: cents(row[4]), p2000: cents(row[5]) };
+    if (p.p500 === null && p.p1000 === null && p.p2000 === null) continue;
+    out.push(p);
+  }
+  return out;
+}
+
+/* Precio promedio del plan al consumo del cliente: interpola entre 500, 1,000 y 2,000 kWh. */
+function v360PlanPriceAt(plan, kwh) {
+  var pts = [[500, plan.p500], [1000, plan.p1000], [2000, plan.p2000]].filter(function (x) { return x[1] !== null; });
+  if (!pts.length) return null;
+  if (kwh <= pts[0][0]) return pts[0][1];
+  for (var i = 1; i < pts.length; i++) {
+    if (kwh <= pts[i][0]) {
+      var a = pts[i - 1], b = pts[i];
+      return a[1] + ((b[1] - a[1]) * (kwh - a[0])) / (b[0] - a[0]);
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
+/* Compara lo que paga hoy el cliente con el plan más barato de su distribuidora en Tarifas.
+   Devuelve {} si falta algún dato (distribuidora, factura, kWh o tarifa). */
+function v360SuggestPlan(lead, tariffs) {
+  var a = lead.answers || {};
+  var out = { tdu: a.distribuidora || "" };
+  if (!/^electricidad$/i.test(lead.service)) return {};
+  var bill = v360Num(a.bill), kwh = v360Num(a.kwh);
+  if (bill !== null && kwh !== null) {
+    var current = (bill / kwh) * 100;
+    if (current >= 5 && current <= 60) out.currentCents = Math.round(current * 10) / 10;
+  }
+  if (!out.tdu || out.tdu.indexOf(" o ") !== -1 || kwh === null) return out;
+  var best = null;
+  (tariffs || []).forEach(function (t) {
+    if (t.tdu.toLowerCase() !== out.tdu.toLowerCase()) return;
+    var price = v360PlanPriceAt(t, kwh);
+    if (price !== null && (!best || price < best.price)) best = { plan: t, price: price };
+  });
+  if (!best) return out;
+  out.planName = best.plan.plan + (best.plan.term ? " (" + best.plan.term + " meses)" : "");
+  out.planCents = Math.round(best.price * 10) / 10;
+  if (out.currentCents) out.monthlyDiff = Math.round(((out.currentCents - out.planCents) * kwh) / 100);
+  return out;
+}
+
+/* Mensaje para que el CLIENTE se inscriba él mismo en el sitio oficial:
+   así escribe su identificación y SSN directamente ahí y nadie más los ve. */
+function v360EnrollmentDraft(lead, url, iboId) {
+  var hi = v360FirstName(lead.name) ? "Hola " + v360FirstName(lead.name) : "Hola";
+  return (
+    hi + ", para completar tu inscripción de forma segura entra a este enlace oficial del proveedor: " + url + " . " +
+    "Ahí mismo escribes tus datos personales (identificación y, si te lo piden, número de Seguro Social); " +
+    "nosotros no los vemos ni los guardamos. Antes de confirmar, revisa la hoja de datos del plan (EFL). " +
+    (iboId ? "Si te pide el número de representante, es " + iboId + ". " : "") +
+    "Si tienes dudas, llámame y lo hacemos juntos por teléfono."
+  );
+}
+
 function v360FirstName(name) {
   return String(name || "").split(" ")[0] || "";
 }
@@ -254,14 +354,33 @@ function v360Safe(value) {
   return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
 }
 
-function v360TrackingRow(lead, now) {
+function v360TrackingRow(lead, now, ctx) {
+  ctx = ctx || {};
   var isActionable = lead.status === "Nuevo" && lead.phone.length === 10;
   var draft = isActionable ? v360WhatsAppDraft(lead) : "";
+  var s = v360SuggestPlan(lead, ctx.tariffs);
+  var isElectricity = /^electricidad$/i.test(lead.service);
+  var enrollUrl = ctx.enrollUrl || V360.ENROLL_URL_ELECTRICIDAD;
+  var enroll = isActionable && isElectricity && enrollUrl ? v360EnrollmentDraft(lead, enrollUrl, V360.IBO_ID) : "";
+  var blank = function (v) { return v === undefined || v === null ? "" : v; };
   return [
     lead.key, lead.receivedAt || "", lead.name, lead.phone, lead.zip, lead.service, lead.source, lead.medium,
     lead.campaign, lead.ad, lead.priority, lead.classification, lead.reason, lead.duplicateOf, lead.status,
     "", "", draft, isActionable ? v360WhatsAppLink(lead.phone, draft) : "", now,
+    blank(s.tdu), blank(s.currentCents), blank(s.planName), blank(s.planCents), blank(s.monthlyDiff),
+    enroll, enroll ? v360WhatsAppLink(lead.phone, enroll) : "",
   ].map(v360Safe);
+}
+
+/* Línea corta para el correo, sin datos personales: "Paga 20¢ · SureLock 18 a 16.9¢ · ~$31/mes". */
+function v360SuggestionLine(s) {
+  if (!s || (!s.currentCents && !s.planName)) return "";
+  var parts = [];
+  if (s.tdu) parts.push(s.tdu);
+  if (s.currentCents) parts.push("paga " + s.currentCents + "¢/kWh");
+  if (s.planName) parts.push(s.planName + " a " + s.planCents + "¢");
+  if (typeof s.monthlyDiff === "number") parts.push((s.monthlyDiff >= 0 ? "ahorro estimado ~$" : "costaría ~$") + Math.abs(s.monthlyDiff) + "/mes");
+  return parts.join(" · ");
 }
 
 function v360Round(n) {
@@ -484,8 +603,28 @@ function v360EnsureSheet(ss, name, headers) {
       sheet.setFrozenRows(1);
       sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
     }
+  } else if (headers && sheet.getLastRow() > 0 && sheet.getLastColumn() < headers.length) {
+    // Pestaña creada con una versión anterior: agrega solo los encabezados nuevos de la derecha,
+    // si los existentes coinciden (nunca mueve ni sobreescribe columnas del dueño).
+    var current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+    var same = current.every(function (h, i) { return h === headers[i]; });
+    if (same) {
+      var extra = headers.slice(current.length);
+      sheet.getRange(1, current.length + 1, 1, extra.length).setValues([extra]).setFontWeight("bold");
+    }
   }
   return sheet;
+}
+
+function v360LoadTariffs(ss) {
+  var sheet = v360EnsureSheet(ss, V360.SHEETS.tariffs, V360.TARIFF_HEADERS);
+  try {
+    var rule = SpreadsheetApp.newDataValidation().requireValueInList(V360.TDUS, true).setAllowInvalid(true).build();
+    sheet.getRange(2, 1, Math.max(1, sheet.getMaxRows() - 1), 1).setDataValidation(rule);
+  } catch (e) {
+    console.warn("No se pudo aplicar la lista de distribuidoras: " + e);
+  }
+  return v360ReadTariffs(v360Retry(function () { return sheet.getDataRange().getValues(); }));
 }
 
 function v360Log(ss, level, message) {
@@ -564,13 +703,14 @@ function processNewLeads() {
     var fresh = data.leads.filter(function (l) { return !(l.key in data.tracking.statusByKey); });
 
     if (fresh.length) {
-      var rows = fresh.map(function (l) { return v360TrackingRow(l, now); });
+      var ctx = { tariffs: v360LoadTariffs(ss), enrollUrl: v360Props().get("ENROLL_URL_ELECTRICIDAD", V360.ENROLL_URL_ELECTRICIDAD) };
+      var rows = fresh.map(function (l) { return v360TrackingRow(l, now, ctx); });
       var sheet = data.tracking.sheet;
       v360Retry(function () {
         sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, V360.TRACKING_HEADERS.length).setValues(rows);
       });
       var actionable = fresh.filter(function (l) { return l.status === "Nuevo"; });
-      if (actionable.length) v360NotifyNewLeads(settings, ss, actionable);
+      if (actionable.length) v360NotifyNewLeads(settings, ss, actionable, ctx);
     }
 
     // Se aplica en cada revisión para que todas las filas tengan la lista de estados vigente.
@@ -599,9 +739,11 @@ function v360ApplyStatusValidation(sheet) {
   }
 }
 
-function v360NotifyNewLeads(settings, ss, leads) {
+function v360NotifyNewLeads(settings, ss, leads, ctx) {
   var lines = leads.map(function (l) {
     var label = "Prioridad " + (l.priority || "-") + " · " + l.classification;
+    var suggestion = v360SuggestionLine(v360SuggestPlan(l, ctx && ctx.tariffs));
+    if (suggestion) label += " · " + suggestion;
     return settings.alertDetails ? v360FirstName(l.name) + " — " + (l.service || "sin servicio") + " — " + label : label;
   });
   MailApp.sendEmail({
@@ -672,6 +814,8 @@ function setup() {
   v360EnsureSheet(ss, V360.SHEETS.panel, null);
   v360EnsureSheet(ss, V360.SHEETS.weekly, V360.WEEKLY_HEADERS);
   v360EnsureSheet(ss, V360.SHEETS.spend, V360.SPEND_HEADERS);
+  v360EnsureSheet(ss, V360.SHEETS.tracking, V360.TRACKING_HEADERS);
+  v360LoadTariffs(ss);
 
   var handlers = ["processNewLeads", "sendWeeklyReport"];
   ScriptApp.getProjectTriggers().forEach(function (t) {
