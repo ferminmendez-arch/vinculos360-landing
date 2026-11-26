@@ -9,7 +9,7 @@
       cambiar ni borrar registros (mínimo privilegio).
 ========================================================= */
 
-import { answersSummary } from "./rules.js";
+import { answersSummary, sheetDevice } from "./rules.js";
 
 export const DEFAULT_SHEET_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbwEVckFhVLHNjrMFNDbYe0N88ikApHK64Z2oB2RJH18nDqA7r02xrwSxYE8L5dzhLNm/exec";
@@ -90,7 +90,7 @@ function cell(value) {
   return /^[=+\-@]/.test(s) ? `'${s}` : s;
 }
 
-export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons }) {
+export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons, savings = { level: "sin_datos" } }) {
   return {
     PartitionKey: receivedAt.slice(0, 7), // AAAA-MM
     RowKey: id,
@@ -108,6 +108,8 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons 
     Language: lead.language,
     Prequalified: prequalified,
     Reasons: reasons.join(","),
+    SavingsLevel: savings.level,
+    ...(savings.rateCents != null ? { RateCents: savings.rateCents } : {}),
     Source: cell(lead.source),
     Medium: cell(lead.medium),
     Campaign: cell(lead.campaign),
@@ -121,7 +123,7 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons 
 /* Cuerpo para el receptor de Apps Script. Las 10 claves originales
    (name … device) son las que entiende el receptor actual; el resto
    solo se guarda cuando se instala el receptor v2. */
-export function leadToSheetBody(lead, { id, receivedAt, prequalified }) {
+export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = { level: "sin_datos" } }) {
   return {
     name: lead.name,
     phone: lead.phone,
@@ -133,7 +135,7 @@ export function leadToSheetBody(lead, { id, receivedAt, prequalified }) {
     ad: lead.ad,
     fbclid: lead.fbclid,
     // "Mobile · Chatbot": el canal queda visible en la hoja desde hoy, sin cambiar el receptor.
-    device: [lead.device, "Chatbot"].filter(Boolean).join(" · "),
+    device: sheetDevice(lead.device, savings.level),
     channel: "chatbot",
     language: lead.language,
     email: lead.email,

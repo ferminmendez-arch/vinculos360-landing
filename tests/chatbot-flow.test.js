@@ -15,10 +15,10 @@ const { CHAT_STRINGS, resolveText } = await import("../src/lib/chatbot/strings.j
 const { submitChatLead, toSheetPayload } = await import("../src/lib/chatbot/api.js");
 const { QUESTIONS, validateChatLead } = await import("../api/src/lib/rules.js");
 
-const { INITIAL_STATE, answer, back, nextStep, answeredSteps, checkInput, buildLeadPayload, prequalify } = flow;
+const { INITIAL_STATE, SKIP, answer, back, nextStep, answeredSteps, checkInput, buildLeadPayload, prequalify } = flow;
 
 const CHOICES = {
-  electricidad: { property: "casa", decision: "si", bill: "100a200", contract: "vencepronto" },
+  electricidad: { property: "casa", decision: "si", bill: "150", kwh: "1000", contract: "vencepronto" },
   internet: { property: "casa", situation: "mejorar", usage: "trabajo", decision: "compartida" },
   seguridad: { housing: "propia", interest: "ambos", timeline: "pronto", decision: "si" },
   otros: { otherType: "movil", property: "casa", decision: "si" },
@@ -121,6 +121,10 @@ test("todos los textos existen en español e inglés", () => {
       for (const q of qs) {
         for (const ctx of [{ property: "casa" }, { property: "negocio" }, {}]) {
           assert.ok(resolveText(s.questions[q.id]?.text, ctx), `${lang} pregunta ${q.id}`);
+          if (q.kind === "number") {
+            assert.ok(s.questions[q.id].placeholder, `${lang} ejemplo ${q.id}`);
+            continue;
+          }
           const opts = resolveText(s.questions[q.id].options, ctx);
           for (const o of q.options) assert.ok(opts[o], `${lang} opción ${q.id}.${o}`);
         }
@@ -130,21 +134,30 @@ test("todos los textos existen en español e inglés", () => {
       assert.ok(s.methods[m]);
       assert.match(s.consentText(m), /Vínculos 360/);
     }
-    for (const code of ["zip_invalid", "name_invalid", "phone_invalid", "email_invalid", "email_required"]) assert.ok(s.errors[code]);
+    for (const code of ["zip_invalid", "name_invalid", "phone_invalid", "email_invalid", "email_required", "number_invalid", "bill_low", "bill_high", "kwh_low", "kwh_high"])
+      assert.ok(s.errors[code], `${lang} error ${code}`);
+    assert.ok(s.skipNumber);
   }
 });
 
 test("los textos públicos del chat pasan el verificador de afirmaciones (sin proveedores, garantías ni cifras de ahorro)", async () => {
   const { lintText } = await import("../automation/content/claims-lint.mjs");
   for (const [lang, s] of Object.entries(CHAT_STRINGS)) {
-    // Los rangos de la factura ("Menos de $100") son opciones de respuesta, no afirmaciones.
-    const { bill, ...questions } = s.questions;
-    assert.ok(bill);
+    const { questions } = s;
     const contextual = [{ property: "casa" }, { property: "negocio" }].flatMap((ctx) => [
       resolveText(s.zipQuestion, ctx),
-      ...Object.values(questions).flatMap((q) => [resolveText(q.text, ctx), ...Object.values(resolveText(q.options, ctx))]),
-      resolveText(bill.text, ctx),
+      ...Object.values(questions).flatMap((q) => [resolveText(q.text, ctx), ...Object.values(resolveText(q.options, ctx) || {})]),
     ]);
+    // Los mensajes de comparación muestran precios por kWh (el del visitante y el promedio público
+    // de la EIA, citado). Esas cifras son la única excepción permitida; ninguna otra regla puede fallar.
+    for (const level of ["alta", "media", "baja"]) {
+      const findings = lintText(s.savingsMessage({ level, rateCents: 18.2, avgCents: 16 }), { fileLabel: `ahorro-${lang}` });
+      assert.deepEqual(
+        findings.filter((f) => !(f.rule === "percent-or-money-claim" && /^\d+(\.\d)?¢$/.test(f.match))),
+        [],
+        `${lang} ${level}`
+      );
+    }
     const text = [
       JSON.stringify({ ...s, questions }),
       ...contextual,
@@ -190,6 +203,42 @@ test("electricidad usa 'energía eléctrica', no 'luz'", () => {
   assert.doesNotMatch(all, /\bluz\b/i);
 });
 
+test("factura y kWh: escribe números o 'No lo sé'; kWh solo si dio la factura", () => {
+  let s = answer(INITIAL_STATE, "service", "electricidad");
+  s = answer(answer(s, "q:property", "casa"), "q:decision", "si");
+  assert.equal(nextStep(s).id, "q:bill");
+  assert.equal(nextStep(s).kind, "number");
+  assert.deepEqual(checkInput("q:bill", "$1,245.50", s), { value: "1245.5" });
+  assert.deepEqual(checkInput("q:bill", "abc", s), { error: "number_invalid" });
+  assert.deepEqual(checkInput("q:bill", "2", s), { error: "bill_low" });
+  const skipped = answer(s, "q:bill", SKIP);
+  assert.equal(nextStep(skipped).id, "q:contract", "sin factura no pregunta kWh");
+  const withBill = answer(s, "q:bill", "180");
+  assert.equal(nextStep(withBill).id, "q:kwh");
+  assert.deepEqual(checkInput("q:kwh", "99999", withBill), { error: "kwh_high" });
+  // Atrás y cambiar la factura a "No lo sé" borra los kWh que ya no aplican.
+  const withKwh = answer(withBill, "q:kwh", "1000");
+  const changed = answer(back(back(withKwh)), "q:bill", SKIP);
+  assert.equal(changed.answers.kwh, undefined);
+});
+
+test("comparación con el promedio de Texas (EIA): alta, media, baja o sin datos", async () => {
+  const { savingsEstimate, TX_RESIDENTIAL_AVG } = await import("../api/src/lib/rules.js");
+  const est = (bill, kwh, extra = {}) => savingsEstimate({ serviceKey: "electricidad", answers: { property: "casa", bill, kwh, ...extra } }).level;
+  assert.equal(TX_RESIDENTIAL_AVG.cents, 16);
+  assert.equal(est("200", "1000"), "alta"); // 20¢
+  assert.equal(est("160", "1000"), "media"); // 16¢
+  assert.equal(est("120", "1000"), "baja"); // 12¢
+  assert.equal(est("nose", "1000"), "sin_datos");
+  assert.equal(est("150", "100"), "sin_datos", "150¢/kWh: dato mal escrito");
+  assert.equal(est("200", "1000", { property: "negocio" }), "sin_datos", "el promedio residencial no aplica a negocios");
+  const msg = CHAT_STRINGS.es.savingsMessage({ level: "alta", rateCents: 20, avgCents: 16 });
+  assert.match(msg, /20\.0¢/);
+  assert.match(msg, /16\.0¢/);
+  assert.match(msg, /EIA/);
+  assert.doesNotMatch(msg, /ahorrar[aá]s|garantiz/i);
+});
+
 /* ---------- Envío ---------- */
 
 function payload() {
@@ -223,7 +272,7 @@ test("si la API no existe o no conecta, envía directo a la hoja con las claves 
   assert.equal(sent.length, 3);
   assert.deepEqual(Object.keys(sent[0]).slice(0, 10), ["name", "phone", "zipCode", "service", "source", "medium", "campaign", "ad", "fbclid", "device"]);
   assert.equal(sent[0].service, "Electricidad");
-  assert.equal(sent[0].device, "Mobile · Chatbot");
+  assert.equal(sent[0].device, "Mobile · Chatbot · Ahorro: media"); // 150 $ / 1000 kWh = 15¢
 });
 
 test("tiempo agotado = no verificado, sin reenviar (evita duplicados)", async () => {

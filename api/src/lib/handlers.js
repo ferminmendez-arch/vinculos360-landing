@@ -96,10 +96,10 @@ export async function handleLead(request, { env = process.env, fetchImpl = fetch
   const checked = validateChatLead(data);
   if (checked.error) return json(400, { ok: false, result: "error", reason: checked.error });
 
-  const { lead, prequalified, reasons } = checked;
+  const { lead, prequalified, reasons, savings } = checked;
   const id = randomUUID();
   const receivedAt = now().toISOString();
-  const meta = { id, receivedAt, prequalified, reasons };
+  const meta = { id, receivedAt, prequalified, reasons, savings };
 
   const tasks = [];
   if (config.leadsTableSasUrl) {
@@ -123,7 +123,7 @@ export async function handleLead(request, { env = process.env, fetchImpl = fetch
     return json(502, { ok: false, result: "error", reason: "storage_unavailable" });
   }
   log.info?.(`lead ${id} guardado en ${saved.join("+")} (precalificado: ${prequalified})`);
-  return json(200, { ok: true, result: "success", id, prequalified, saved });
+  return json(200, { ok: true, result: "success", id, prequalified, savings: savings.level, saved });
 }
 
 /* ---------- POST /api/chat-event ---------- */

@@ -3,11 +3,13 @@ import { ArrowLeft, CircleAlert, CircleCheck, LoaderCircle, MessageCircle, Rotat
 import { CHAT_STRINGS, resolveText } from "../lib/chatbot/strings.js";
 import {
   INITIAL_STATE,
+  SKIP,
   answer,
   answeredSteps,
   back,
   buildLeadPayload,
   checkInput,
+  estimateSavings,
   nextStep,
   prequalify,
   valueOf,
@@ -41,13 +43,29 @@ function optionLabel(s, state, stepId, value) {
 
 function answerLabel(s, state, step) {
   const value = valueOf(state, step.id);
+  if (step.kind === "number") {
+    if (value === SKIP) return s.skipNumber;
+    const q = s.questions[step.id.slice(2)];
+    const n = Number(value).toLocaleString("en-US");
+    return `${q.prefix || ""}${n}${q.suffix ? ` ${q.suffix}` : ""}`;
+  }
   return step.kind === "choice" ? optionLabel(s, state, step.id, value) : value;
+}
+
+/* Propiedades del campo de texto para cada paso escrito. */
+function inputFor(s, step, state) {
+  if (step.kind === "number") {
+    const q = s.questions[step.id.slice(2)];
+    return { ...INPUTS.number, label: resolveText(q.text, state.answers), placeholder: q.placeholder };
+  }
+  return { ...INPUTS[step.id], label: s.labels[step.id], placeholder: s.placeholders[step.id === "zipCode" ? "zip" : step.id] };
 }
 
 const INPUTS = {
   zipCode: { type: "text", inputMode: "numeric", autoComplete: "postal-code", maxLength: 5, format: (v) => digitsOnly(v).slice(0, 5) },
   name: { type: "text", autoComplete: "name", autoCapitalize: "words", maxLength: 80, format: (v) => v },
   phone: { type: "tel", inputMode: "tel", autoComplete: "tel-national", maxLength: 14, format: (v) => formatUsPhone(v) },
+  number: { type: "text", inputMode: "decimal", autoComplete: "off", maxLength: 10, format: (v) => v.replace(/[^\d.,$]/g, "") },
   email: { type: "email", inputMode: "email", autoComplete: "email", maxLength: 120, format: (v) => v },
 };
 
@@ -129,6 +147,8 @@ export default function ChatPanel({ open, onClose, lang }) {
       trackChatEvent("chat_start", { language: lang, serviceKey: value });
     }
     setState((prev) => answer(prev, step.id, value));
+    setDraft("");
+    setInputError("");
     setStatus("idle");
   };
 
@@ -220,6 +240,7 @@ export default function ChatPanel({ open, onClose, lang }) {
   };
 
   const answered = answeredSteps(state);
+  const savings = estimateSavings(state);
 
   return (
     <section
@@ -258,6 +279,7 @@ export default function ChatPanel({ open, onClose, lang }) {
           <div key={item.id} className="space-y-3">
             <BotBubble>{questionText(s, state, item.id)}</BotBubble>
             <UserBubble label={s.you}>{answerLabel(s, state, item)}</UserBubble>
+            {item.id === "q:kwh" && savings.level !== "sin_datos" && <BotBubble>{s.savingsMessage(savings)}</BotBubble>}
           </div>
         ))}
         {step && !done && <BotBubble>{questionText(s, state, step.id)}</BotBubble>}
@@ -301,49 +323,61 @@ export default function ChatPanel({ open, onClose, lang }) {
           </div>
         )}
 
-        {step?.kind === "input" && !done && (
-          <form noValidate onSubmit={submitInput}>
-            <label htmlFor="v360-chat-input" className="sr-only">
-              {s.labels[step.id]}
-            </label>
-            <div className="flex gap-2">
-              <input
-                key={step.id}
-                ref={focusRef}
-                id="v360-chat-input"
-                type={INPUTS[step.id].type}
-                inputMode={INPUTS[step.id].inputMode}
-                autoComplete={INPUTS[step.id].autoComplete}
-                autoCapitalize={INPUTS[step.id].autoCapitalize}
-                maxLength={INPUTS[step.id].maxLength}
-                value={draft}
-                placeholder={s.placeholders[step.id === "zipCode" ? "zip" : step.id]}
-                onChange={(e) => {
-                  setDraft(INPUTS[step.id].format(e.target.value));
-                  if (inputError) setInputError("");
-                }}
-                aria-invalid={Boolean(inputError)}
-                aria-describedby={inputError ? "v360-chat-error" : undefined}
-                className={`block min-w-0 flex-1 rounded-full border bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:outline-none ${
-                  inputError ? "border-red-500 focus:ring-red-100" : "border-slate-300 focus:border-brand-600 focus:ring-brand-100"
-                }`}
-              />
-              <button
-                type="submit"
-                aria-label={s.send}
-                className="inline-flex shrink-0 items-center justify-center rounded-full bg-brand-700 px-4 text-white hover:bg-brand-800"
-              >
-                <Send className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-            {inputError && (
-              <p id="v360-chat-error" className="mt-2 flex items-center gap-1.5 text-sm font-medium text-red-700">
-                <CircleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {inputError}
-              </p>
-            )}
-          </form>
-        )}
+        {(step?.kind === "input" || step?.kind === "number") && !done && (() => {
+          const field = inputFor(s, step, state);
+          return (
+            <form noValidate onSubmit={submitInput}>
+              <label htmlFor="v360-chat-input" className="sr-only">
+                {field.label}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  key={step.id}
+                  ref={focusRef}
+                  id="v360-chat-input"
+                  type={field.type}
+                  inputMode={field.inputMode}
+                  autoComplete={field.autoComplete}
+                  autoCapitalize={field.autoCapitalize}
+                  maxLength={field.maxLength}
+                  value={draft}
+                  placeholder={field.placeholder}
+                  onChange={(e) => {
+                    setDraft(field.format(e.target.value));
+                    if (inputError) setInputError("");
+                  }}
+                  aria-invalid={Boolean(inputError)}
+                  aria-describedby={inputError ? "v360-chat-error" : undefined}
+                  className={`block min-w-0 flex-1 rounded-full border bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:outline-none ${
+                    inputError ? "border-red-500 focus:ring-red-100" : "border-slate-300 focus:border-brand-600 focus:ring-brand-100"
+                  }`}
+                />
+                <button
+                  type="submit"
+                  aria-label={s.send}
+                  className="inline-flex shrink-0 items-center justify-center rounded-full bg-brand-700 px-4 text-white hover:bg-brand-800"
+                >
+                  <Send className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+              {inputError && (
+                <p id="v360-chat-error" className="mt-2 flex items-center gap-1.5 text-sm font-medium text-red-700">
+                  <CircleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {inputError}
+                </p>
+              )}
+              {step.kind === "number" && (
+                <button
+                  type="button"
+                  onClick={() => choose(SKIP)}
+                  className="mt-2 rounded-full border-2 border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 transition-colors hover:border-brand-600 hover:bg-brand-50"
+                >
+                  {s.skipNumber}
+                </button>
+              )}
+            </form>
+          );
+        })()}
 
         {step?.kind === "consent" && !done && (
           <form noValidate onSubmit={sendRequest} className="space-y-3">

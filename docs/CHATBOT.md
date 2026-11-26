@@ -14,6 +14,13 @@ Hoja Leads ──(cada 15 min)──▶ Agente de leads: Seguimiento + correo al
 
 - **Servicios:** Electricidad y ahorro · Internet para el hogar · Seguridad del hogar · Otros servicios. Cada uno tiene 3–4 preguntas propias.
 - **Datos que pide:** ZIP Code, nombre, medio de contacto preferido (WhatsApp, llamada, texto o correo), teléfono, correo (solo si eligió correo) y consentimiento explícito (casilla sin marcar por defecto).
+- **Comparación de precio (solo electricidad, para casa):**
+  - el chat pide el total de la última factura y los kWh de ese mes; en cada uno se puede responder "No lo sé";
+  - calcula el precio por kWh que paga el visitante (factura ÷ kWh) y lo compara con el **promedio residencial de Texas de la EIA**;
+  - el promedio está en `TX_RESIDENTIAL_AVG` (`api/src/lib/rules.js`): 16.0¢, 12 meses a septiembre de 2026; actualízalo cada trimestre;
+  - resultado: **alta** (10 % o más arriba del promedio), **media** o **baja** (10 % o más abajo). Sale en *Device* (`Mobile · Chatbot · Ahorro: alta`) y en *Answers* (`precio_kwh=20c; oportunidad=alta`);
+  - no usa tarifas de ningún proveedor, no lo nombra y no promete un ahorro concreto. Los términos de la tienda de ACN (Sección 2) prohíben reutilizar sus listas de precios;
+  - para negocios no se compara, porque el promedio es residencial.
 - **Respuestas como códigos:** las preguntas se guardan como códigos (`property=casa; decision=si`), no como texto libre.
 - **Precalificado:** decide sobre el servicio, es para casa, y para electricidad el ZIP es de Texas fuera de Austin/San Antonio/El Paso. Para seguridad, además, no está "solo explorando". Es una ayuda para priorizar; el estado **Calificado** lo sigue poniendo el dueño en *Seguimiento*.
 - **Nunca se pierde un lead:** el sitio solo muestra "Recibimos tu solicitud" cuando la API confirma que se guardó en al menos un destino. Si la API no existe o no conecta, el widget envía directo al receptor de Apps Script. Si nada funciona, conserva las respuestas, ofrece WhatsApp con los datos y reintenta en la próxima visita.

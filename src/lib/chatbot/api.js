@@ -14,7 +14,7 @@
 ========================================================= */
 
 import { interpretResponse, sendLead } from "../leads.js";
-import { SERVICE_VALUES } from "../../../api/src/lib/rules.js";
+import { SERVICE_VALUES, savingsEstimate, sheetDevice } from "../../../api/src/lib/rules.js";
 
 export const LEADS_API = "/api/leads";
 export const EVENTS_API = "/api/chat-event";
@@ -32,7 +32,7 @@ export function toSheetPayload(payload) {
     campaign: payload.campaign,
     ad: payload.ad,
     fbclid: payload.fbclid,
-    device: [payload.device, "Chatbot"].filter(Boolean).join(" · "),
+    device: sheetDevice(payload.device, savingsEstimate(payload).level),
     channel: "chatbot",
     language: payload.language,
     email: payload.email,

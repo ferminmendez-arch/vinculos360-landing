@@ -25,7 +25,9 @@ export const QUESTIONS = {
   electricidad: [
     { id: "property", options: ["casa", "negocio"] },
     { id: "decision", options: ["si", "compartida", "no"] },
-    { id: "bill", options: ["menos100", "100a200", "mas200", "nose"] },
+    // Preguntas numéricas: el visitante escribe un número o elige "No lo sé" ("nose").
+    { id: "bill", kind: "number", min: 10, max: 3000 },
+    { id: "kwh", kind: "number", min: 50, max: 10000, askIf: (a) => isNumberAnswer(a.bill) },
     { id: "contract", options: ["sincontrato", "vencepronto", "vencedespues", "nose"] },
   ],
   internet: [
@@ -46,6 +48,47 @@ export const QUESTIONS = {
     { id: "decision", options: ["si", "compartida", "no"] },
   ],
 };
+
+export const SKIP = "nose";
+
+/* Precio promedio residencial de electricidad en Texas, todo incluido
+   (energía, entrega e impuestos). Fuente: U.S. Energy Information
+   Administration (EIA), formulario EIA-861M; promedio de 12 meses
+   a septiembre de 2026. Es un dato público del gobierno, no una tarifa
+   de ningún proveedor. Actualizar cada trimestre. */
+export const TX_RESIDENTIAL_AVG = { cents: 16.0, periodEs: "12 meses a sep. 2026", periodEn: "12 months to Sep 2026" };
+
+export function isNumberAnswer(value) {
+  return value !== undefined && value !== "" && value !== SKIP && Number.isFinite(Number(value));
+}
+
+/* "$1,245.50" → "1245.5"; devuelve null si no es un número. */
+export function parseAmount(raw) {
+  const cleaned = String(raw ?? "").replace(/[$,\s]/g, "").replace(/kwh$/i, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
+  return String(Number(cleaned));
+}
+
+/* Compara el precio por kWh que paga el visitante (factura ÷ kWh) con el
+   promedio residencial de Texas. Solo para electricidad en casa.
+   level: "alta" (≥10 % arriba), "media", "baja" (≥10 % abajo) o "sin_datos". */
+export function savingsEstimate({ serviceKey, answers = {} }, avg = TX_RESIDENTIAL_AVG) {
+  if (serviceKey !== "electricidad" || answers.property !== "casa") return { level: "sin_datos" };
+  if (!isNumberAnswer(answers.bill) || !isNumberAnswer(answers.kwh)) return { level: "sin_datos" };
+  const rate = (Number(answers.bill) / Number(answers.kwh)) * 100;
+  // Fuera de este rango casi seguro hay un dato mal escrito.
+  if (!Number.isFinite(rate) || rate < 5 || rate > 60) return { level: "sin_datos" };
+  const ratio = rate / avg.cents;
+  const level = ratio >= 1.1 ? "alta" : ratio <= 0.9 ? "baja" : "media";
+  return { level, rateCents: Math.round(rate * 10) / 10, avgCents: avg.cents };
+}
+
+/* Texto de la columna Device en la hoja: "Mobile · Chatbot · Ahorro: alta". */
+export function sheetDevice(device, level) {
+  const parts = [device, "Chatbot"];
+  if (["alta", "media", "baja"].includes(level)) parts.push(`Ahorro: ${level}`);
+  return parts.filter(Boolean).join(" · ");
+}
 
 export const CONTACT_METHODS = ["whatsapp", "llamada", "texto", "correo"];
 export const LANGS = ["es", "en"];
@@ -156,10 +199,10 @@ export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
 
 /* Resumen compacto de respuestas para la hoja: "property=casa; decision=si". */
 export function answersSummary(serviceKey, answers = {}) {
-  return (QUESTIONS[serviceKey] || [])
-    .filter((q) => answers[q.id])
-    .map((q) => `${q.id}=${answers[q.id]}`)
-    .join("; ");
+  const parts = (QUESTIONS[serviceKey] || []).filter((q) => answers[q.id]).map((q) => `${q.id}=${answers[q.id]}`);
+  const est = savingsEstimate({ serviceKey, answers });
+  if (est.level !== "sin_datos") parts.push(`precio_kwh=${est.rateCents}c`, `oportunidad=${est.level}`);
+  return parts.join("; ");
 }
 
 /* ---------- Validación completa (servidor y navegador) ----------
@@ -180,7 +223,14 @@ export function validateChatLead(data) {
   const raw = data.answers && typeof data.answers === "object" && !Array.isArray(data.answers) ? data.answers : {};
   const answers = {};
   for (const q of QUESTIONS[serviceKey]) {
+    if (q.askIf && !q.askIf(answers)) continue; // pregunta que no aplica: se ignora lo que venga
     const value = String(raw[q.id] ?? "");
+    if (q.kind === "number") {
+      const n = value === SKIP ? SKIP : parseAmount(value);
+      if (n === null || (n !== SKIP && (Number(n) < q.min || Number(n) > q.max))) return { error: `invalid_answer_${q.id}` };
+      answers[q.id] = n;
+      continue;
+    }
     if (!q.options.includes(value)) return { error: `invalid_answer_${q.id}` };
     answers[q.id] = value;
   }
@@ -222,7 +272,7 @@ export function validateChatLead(data) {
     fbclid: shortText(data.fbclid),
     device,
   };
-  return { lead, ...qualify({ serviceKey, answers, zipCode: lead.zipCode, consent: true }) };
+  return { lead, savings: savingsEstimate({ serviceKey, answers }), ...qualify({ serviceKey, answers, zipCode: lead.zipCode, consent: true }) };
 }
 
 /* Evento de métricas: nunca lleva datos personales. */

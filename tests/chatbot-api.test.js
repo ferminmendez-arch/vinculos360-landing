@@ -10,7 +10,7 @@ const allowAll = () => true;
 
 const BODY = {
   serviceKey: "electricidad",
-  answers: { property: "casa", decision: "si", bill: "mas200", contract: "sincontrato" },
+  answers: { property: "casa", decision: "si", bill: "$200", kwh: "1,000", contract: "sincontrato" },
   name: "Prueba QA",
   phone: "281-555-0100",
   zipCode: "77494",
@@ -66,9 +66,10 @@ test("guarda en la hoja (por defecto) y confirma con id", async () => {
   assert.equal(sent.name, "Prueba QA");
   assert.equal(sent.phone, "(281) 555-0100");
   assert.equal(sent.service, "Electricidad");
-  assert.equal(sent.device, "Mobile · Chatbot");
+  assert.equal(sent.device, "Mobile · Chatbot · Ahorro: alta");
   assert.equal(sent.qualification, "Precalificado");
-  assert.equal(sent.answers, "property=casa; decision=si; bill=mas200; contract=sincontrato");
+  assert.equal(sent.answers, "property=casa; decision=si; bill=200; kwh=1000; contract=sincontrato; precio_kwh=20c; oportunidad=alta");
+  assert.equal(res.jsonBody.savings, "alta");
   assert.equal(res.headers["Cache-Control"], "no-store");
 });
 

@@ -7,6 +7,10 @@
 ========================================================= */
 
 import { PHONE_DISPLAY } from "../../config.js";
+import { TX_RESIDENTIAL_AVG } from "../../../api/src/lib/rules.js";
+
+/* 16 → "16.0"; en español con punto decimal, como en las facturas de EE. UU. */
+const fmt = (n) => Number(n).toFixed(1);
 
 /* Algunas preguntas cambian si el servicio es para un negocio. */
 const isBusiness = (answers = {}) => answers.property === "negocio" || answers.housing === "negocio";
@@ -39,8 +43,15 @@ const es = {
       options: { si: "Sí, yo decido", compartida: "Lo decido con alguien más", no: "No, decide otra persona" },
     },
     bill: {
-      text: (a) => `Aproximadamente, ¿cuánto paga${isBusiness(a) ? " tu negocio" : "s"} al mes de energía eléctrica?`,
-      options: { menos100: "Menos de $100", "100a200": "Entre $100 y $200", mas200: "Más de $200", nose: "No estoy seguro" },
+      text: (a) =>
+        `¿Cuánto ${isBusiness(a) ? "pagó tu negocio" : "pagaste"} en la última factura de energía eléctrica? Escribe el total en dólares.`,
+      placeholder: "145",
+      prefix: "$",
+    },
+    kwh: {
+      text: "¿Cuántos kWh usaste ese mes? Aparece en tu factura como “kWh” o “consumo”.",
+      placeholder: "1200",
+      suffix: "kWh",
     },
     contract: {
       text: (a) => `¿${isBusiness(a) ? "Tu negocio tiene" : "Tienes"} un contrato de energía eléctrica vigente?`,
@@ -78,6 +89,13 @@ const es = {
       text: "¿Qué otro servicio te interesa?",
       options: { movil: "Telefonía celular", fija: "Teléfono de casa", otro: "Otro servicio" },
     },
+  },
+  skipNumber: "No lo sé",
+  savingsMessage: ({ level, rateCents, avgCents }) => {
+    const base = `Según tu factura, pagas cerca de ${fmt(rateCents)}¢ por kWh, todo incluido. El promedio residencial en Texas es ${fmt(avgCents)}¢ (EIA, ${TX_RESIDENTIAL_AVG.periodEs}).`;
+    if (level === "alta") return `${base} Estás pagando más que el promedio: vale la pena revisar tus opciones.`;
+    if (level === "baja") return `${base} Tu precio está por debajo del promedio, buena señal. Igual podemos revisar cuándo vence tu contrato.`;
+    return `${base} Tu precio está cerca del promedio; igual podemos revisar si hay un plan que te convenga más.`;
   },
   zipQuestion: (a) => `¿Cuál es el ZIP Code de ${isBusiness(a) ? "tu negocio" : "tu casa"}? Así revisamos qué opciones hay en tu zona.`,
   nameQuestion: "¿Cómo te llamas?",
@@ -117,6 +135,11 @@ const es = {
     phone_invalid: "Escribe un teléfono válido de 10 dígitos.",
     email_required: "Escribe tu correo electrónico.",
     email_invalid: "Escribe un correo electrónico válido.",
+    number_invalid: "Escribe solo el número, por ejemplo 145.",
+    bill_low: "Esa cantidad parece muy baja. Revisa el total de tu factura.",
+    bill_high: "Esa cantidad parece muy alta. Revisa el total de tu factura.",
+    kwh_low: "Ese consumo parece muy bajo. Revisa los kWh en tu factura.",
+    kwh_high: "Ese consumo parece muy alto. Revisa los kWh en tu factura.",
   },
   whatsappMessage: ({ name, service, zipCode, method }) =>
     [
@@ -154,8 +177,14 @@ const en = {
       options: { si: "Yes, I decide", compartida: "I decide with someone else", no: "No, someone else decides" },
     },
     bill: {
-      text: (a) => `About how much is ${isBusiness(a) ? "your business's" : "your"} monthly electric bill?`,
-      options: { menos100: "Less than $100", "100a200": "Between $100 and $200", mas200: "More than $200", nose: "Not sure" },
+      text: (a) => `How much was ${isBusiness(a) ? "your business's" : "your"} last electric bill? Enter the total in dollars.`,
+      placeholder: "145",
+      prefix: "$",
+    },
+    kwh: {
+      text: "How many kWh did you use that month? It's on your bill as “kWh” or “usage”.",
+      placeholder: "1200",
+      suffix: "kWh",
     },
     contract: {
       text: (a) => (isBusiness(a) ? "Does your business currently have an electricity contract?" : "Do you currently have an electricity contract?"),
@@ -193,6 +222,13 @@ const en = {
       text: "Which other service are you interested in?",
       options: { movil: "Cell phone service", fija: "Home phone", otro: "Another service" },
     },
+  },
+  skipNumber: "I don't know",
+  savingsMessage: ({ level, rateCents, avgCents }) => {
+    const base = `Based on your bill, you pay about ${rateCents.toFixed(1)}¢ per kWh, all-in. The Texas residential average is ${avgCents.toFixed(1)}¢ (EIA, ${TX_RESIDENTIAL_AVG.periodEn}).`;
+    if (level === "alta") return `${base} You're paying more than average, so it's worth reviewing your options.`;
+    if (level === "baja") return `${base} Your price is below average, which is a good sign. We can still check when your contract ends.`;
+    return `${base} Your price is close to average; we can still check whether another plan suits you better.`;
   },
   zipQuestion: (a) => `What's ${isBusiness(a) ? "your business's" : "your home"} ZIP Code? That way we can check the options in your area.`,
   nameQuestion: "What's your name?",
@@ -232,6 +268,11 @@ const en = {
     phone_invalid: "Enter a valid 10-digit phone number.",
     email_required: "Enter your email address.",
     email_invalid: "Enter a valid email address.",
+    number_invalid: "Enter just the number, for example 145.",
+    bill_low: "That amount looks too low. Check your bill total.",
+    bill_high: "That amount looks too high. Check your bill total.",
+    kwh_low: "That usage looks too low. Check the kWh on your bill.",
+    kwh_high: "That usage looks too high. Check the kWh on your bill.",
   },
   whatsappMessage: ({ name, service, zipCode, method }) =>
     [
