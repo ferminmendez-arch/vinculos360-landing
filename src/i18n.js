@@ -39,6 +39,7 @@ const es = {
     imageAlt: "Familia sonriente revisando sus facturas en la cocina de su casa",
     chatStatus: "En línea",
     chatMessage: "¡Hola! Te explicamos tus opciones.",
+    chatOpen: "Abrir el chat de Vínculos 360",
   },
   benefits: ["Atención personalizada", "Orientación sin compromiso", "Proceso rápido y sencillo"],
 
@@ -195,6 +196,7 @@ const en = {
     imageAlt: "Smiling family reviewing their bills in their kitchen at home",
     chatStatus: "Online",
     chatMessage: "Hi! We'll explain your options.",
+    chatOpen: "Open the Vínculos 360 chat",
   },
   benefits: ["Personalized attention", "No-obligation guidance", "Quick and simple process"],
 
