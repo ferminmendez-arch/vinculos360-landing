@@ -9,6 +9,17 @@ import { lintPostFile, lintText } from "../automation/content/claims-lint.mjs";
 import { buildLink, generateWeek, loadTopics, pickTopics } from "../automation/content/generate.mjs";
 import { planPublications, run } from "../automation/content/publish-meta.mjs";
 
+/* Envuelve un mock de Meta: responde la consulta del token de la página y delega el resto. */
+function withPageToken(handler, { tokenCalls } = {}) {
+  return async (url, init = {}) => {
+    if (/\?fields=access_token$/.test(url)) {
+      if (tokenCalls) tokenCalls.push(init.headers?.Authorization);
+      return { ok: true, status: 200, json: async () => ({ access_token: "token-de-pagina" }) };
+    }
+    return handler(url, init);
+  };
+}
+
 const business = JSON.parse(fs.readFileSync(new URL("../automation/config/business.json", import.meta.url), "utf8"));
 const quietLogger = { info() {}, warn() {}, error() {}, entries: [] };
 
@@ -165,14 +176,15 @@ test("programa con published=false y hora futura; nunca expone el token", async 
   const bodies = [];
   const results = await run(files, {
     env: ENABLED, now: NOW, business, logger: quietLogger, sleep: noSleep,
-    fetchImpl: async (url, init) => {
+    fetchImpl: withPageToken(async (url, init) => {
       assert.match(url, /^https:\/\/graph\.facebook\.com\/v\d+\.0\/123\/feed$/);
       bodies.push(JSON.parse(init.body));
       return { ok: true, status: 200, json: async () => ({ id: `123_${bodies.length}` }) };
-    },
+    }),
   });
   assert.equal(results.filter((r) => r.outcome === "scheduled").length, 3);
   bodies.forEach((b) => {
+    assert.equal(b.access_token, "token-de-pagina", "publica con el token de la página");
     assert.equal(b.published, false);
     assert.ok(b.scheduled_publish_time * 1000 > NOW.getTime());
     assert.match(b.message, /utm_source=facebook/);
@@ -184,11 +196,11 @@ test("reintenta errores temporales de Meta y luego funciona", async () => {
   let calls = 0;
   const results = await run([file], {
     env: ENABLED, now: NOW, business, logger: quietLogger, sleep: noSleep,
-    fetchImpl: async () => {
+    fetchImpl: withPageToken(async () => {
       calls += 1;
       if (calls === 1) return { ok: false, status: 503, json: async () => ({ error: { message: "temporal", code: 2 } }) };
       return { ok: true, status: 200, json: async () => ({ id: "123_9" }) };
-    },
+    }),
   });
   assert.equal(calls, 2);
   assert.equal(results[0].outcome, "scheduled");
@@ -199,10 +211,10 @@ test("no reintenta errores de permisos y reporta la falla", async () => {
   let calls = 0;
   const results = await run([file], {
     env: ENABLED, now: NOW, business, logger: quietLogger, sleep: noSleep,
-    fetchImpl: async () => {
+    fetchImpl: withPageToken(async () => {
       calls += 1;
       return { ok: false, status: 403, json: async () => ({ error: { message: "Permisos insuficientes", code: 200 } }) };
-    },
+    }),
   });
   assert.equal(calls, 1);
   assert.equal(results[0].outcome, "failed");
@@ -214,10 +226,10 @@ test("si Meta no responde a tiempo no reintenta (evita duplicar) y lo marca sin 
   let calls = 0;
   const results = await run([file], {
     env: { ...ENABLED, META_TIMEOUT_MS: "20" }, now: NOW, business, logger: quietLogger, sleep: noSleep,
-    fetchImpl: (url, init) => {
+    fetchImpl: withPageToken((url, init) => {
       calls += 1;
       return new Promise((resolve, reject) => init.signal.addEventListener("abort", () => reject(Object.assign(new Error("abort"), { name: "AbortError" }))));
-    },
+    }),
   });
   assert.equal(calls, 1);
   assert.equal(results[0].outcome, "unverified");
@@ -227,6 +239,32 @@ test("no vuelve a programar una publicación que ya estaba aprobada (p. ej., al 
   const files = writeWeek();
   const plan = planPublications(files, { now: NOW, business, previousStatusOf: () => "approved" });
   assert.ok(plan.every((p) => p.action === "skip" && /ya estaba aprobada/.test(p.reason)));
+});
+
+test("usa el token del usuario del sistema solo para obtener el de la página, una vez por ejecución", async () => {
+  const files = writeWeek();
+  const tokenCalls = [];
+  await run(files, {
+    env: ENABLED, now: NOW, business, logger: quietLogger, sleep: noSleep,
+    fetchImpl: withPageToken(async () => ({ ok: true, status: 200, json: async () => ({ id: "123_1" }) }), { tokenCalls }),
+  });
+  assert.deepEqual(tokenCalls, ["Bearer secreto-de-prueba"]);
+});
+
+test("si no se obtiene el token de la página, no publica nada y lo reporta sin exponer el token", async () => {
+  const files = writeWeek();
+  let feedCalls = 0;
+  const results = await run(files, {
+    env: ENABLED, now: NOW, business, logger: quietLogger, sleep: noSleep,
+    fetchImpl: async (url) => {
+      if (/fields=access_token/.test(url)) return { ok: false, status: 400, json: async () => ({ error: { message: "Invalid OAuth access token", code: 190 } }) };
+      feedCalls += 1;
+      return { ok: true, status: 200, json: async () => ({ id: "x" }) };
+    },
+  });
+  assert.equal(feedCalls, 0);
+  assert.ok(results.every((r) => r.outcome === "failed" && /código 190/.test(r.reason)));
+  assert.ok(results.every((r) => !r.reason.includes("secreto-de-prueba")));
 });
 
 test("no programa publicaciones cuya hora ya pasó", () => {
