@@ -1,0 +1,17 @@
+{
+  "name": "vinculos360-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API del chatbot de Vínculos 360 (Azure Static Web Apps, funciones administradas).",
+  "type": "module",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.6.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
