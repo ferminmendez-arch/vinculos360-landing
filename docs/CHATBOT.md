@@ -74,7 +74,7 @@ Todas son opcionales. Sin ninguna, la API guarda en la hoja actual.
 | `LEADS_SHEET_ENDPOINT` | receptor de producción | Apuntar a una hoja de pruebas. |
 | `LEADS_TABLE_SAS_URL` | (vacío) | Guardar también en Azure Table (SAS de tabla, `sp=a`). |
 | `EVENTS_TABLE_SAS_URL` | (vacío) | Métricas en Azure Table (SAS de tabla, `sp=a`). |
-| `CHAT_EVENTS_TO_SHEET` | `false` | `true` cuando el receptor v2 esté instalado: métricas en la pestaña *Chatbot*. |
+| `CHAT_EVENTS_TO_SHEET` | `true` | Métricas en la pestaña *Chatbot* (receptor v2, instalado el 26 nov 2026). `false` las apaga. |
 | `ALLOWED_ORIGINS` | (vacío) | Orígenes extra separados por comas. |
 
 ## Notificaciones por correo (sin costo)
@@ -96,7 +96,7 @@ En la columna *Device* aparecen como `Mobile · Chatbot`. Si quieres avisos más
 | Precalificadas | `chat_qualified` | Completada y precalificada |
 
 Dónde verlas (elige una):
-1. **Sin costo:** instala el receptor v2 y pon `CHAT_EVENTS_TO_SHEET=true` → pestaña **Chatbot** de la hoja, una fila por día.
+1. **Sin costo (activo):** pestaña **Chatbot** de la hoja, una fila por día (receptor v2).
 2. **Azure Table** (si se aprueba): `EVENTS_TABLE_SAS_URL` y `node automation/chatbot/metrics.mjs 30`.
 
 Si hay Google Tag Manager, también se envían a `dataLayer`. El píxel de Meta (si existe) recibe `Lead` al completar.
@@ -116,7 +116,7 @@ Si hay Google Tag Manager, también se envían a `dataLayer`. El píxel de Meta 
    3. guarda;
    4. ejecuta `setupLeadsSheet()` una vez: agrega 10 columnas a la derecha de *LeadId* y crea la pestaña *Chatbot*;
    5. en Implementar → Administrar implementaciones → editar la implementación **existente**, elige *Versión nueva*. Así el `/exec` no cambia.
-   6. Después pon `CHAT_EVENTS_TO_SHEET=true` en Azure.
+   6. Las métricas a la hoja ya están activas por defecto (`CHAT_EVENTS_TO_SHEET`).
 5. **Azure Table Storage (opcional, requiere aprobación porque es un recurso con costo):**
    1. crea una cuenta de almacenamiento Standard LRS en Central US;
    2. crea las tablas `chatleads` y `chatevents`;

@@ -23,7 +23,8 @@ export function readConfig(env = process.env) {
   return {
     sheetEnabled: flag("LEADS_SHEET_ENABLED", true),
     sheetEndpoint: String(env.LEADS_SHEET_ENDPOINT || DEFAULT_SHEET_ENDPOINT).trim(),
-    eventsToSheet: flag("CHAT_EVENTS_TO_SHEET", false),
+    // El receptor v2 (instalado el 26 nov 2026) suma las métricas en la pestaña "Chatbot".
+    eventsToSheet: flag("CHAT_EVENTS_TO_SHEET", true),
     leadsTableSasUrl: String(env.LEADS_TABLE_SAS_URL || "").trim(),
     eventsTableSasUrl: String(env.EVENTS_TABLE_SAS_URL || "").trim(),
     extraOrigins: String(env.ALLOWED_ORIGINS || "")

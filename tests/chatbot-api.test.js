@@ -181,9 +181,12 @@ test("métricas: solo eventos conocidos, sin datos personales; a tabla y/o hoja 
   assert.deepEqual(sheetCall.body, { type: "chat_event", event: "chat_open", language: "en", serviceKey: "internet" });
 
   const none = fakeFetch([]);
-  const r2 = await handleEvent(request({ event: "chat_start" }), { env: {}, fetchImpl: none, log: quiet, limiter: allowAll });
+  const r2 = await handleEvent(request({ event: "chat_start" }), { env: { CHAT_EVENTS_TO_SHEET: "false" }, fetchImpl: none, log: quiet, limiter: allowAll });
   assert.equal(r2.status, 202);
-  assert.equal(none.calls.length, 0, "por defecto los eventos no van a la hoja");
+  assert.equal(none.calls.length, 0, "con CHAT_EVENTS_TO_SHEET=false los eventos no van a la hoja");
+  const sheet = fakeFetch([["script.google.com", sheetOk]]);
+  await handleEvent(request({ event: "chat_open" }), { env: {}, fetchImpl: sheet, log: quiet, limiter: allowAll });
+  assert.equal(sheet.calls.length, 1, "por defecto (receptor v2 instalado) los eventos van a la pestaña Chatbot");
 
   const bad = await handleEvent(request({ event: "drop_table" }), { env: {}, fetchImpl: none, log: quiet, limiter: allowAll });
   assert.equal(bad.status, 400);
