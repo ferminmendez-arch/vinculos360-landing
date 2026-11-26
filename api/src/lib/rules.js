@@ -35,7 +35,7 @@ export const QUESTIONS = {
     { id: "decision", options: ["si", "compartida", "no"] },
   ],
   seguridad: [
-    { id: "housing", options: ["propia", "rentada", "apartamento"] },
+    { id: "housing", options: ["propia", "rentada", "apartamento", "negocio"] },
     { id: "interest", options: ["camaras", "monitoreo", "ambos", "nosegura"] },
     { id: "timeline", options: ["pronto", "1a3meses", "explorando"] },
     { id: "decision", options: ["si", "compartida", "no"] },
@@ -145,7 +145,7 @@ export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
   const reasons = [];
   if (!consent) reasons.push("sin_consentimiento");
   if (answers.decision === "no") reasons.push("no_decide");
-  if (answers.property === "negocio") reasons.push("negocio");
+  if (answers.property === "negocio" || answers.housing === "negocio") reasons.push("negocio");
   if (serviceKey === "electricidad") {
     if (!isTexasZip(zipCode)) reasons.push("fuera_de_texas");
     else if (isLikelyNoChoiceZip(zipCode)) reasons.push("zona_sin_opcion_probable");

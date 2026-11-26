@@ -9,7 +9,7 @@
 import { PHONE_DISPLAY } from "../../config.js";
 
 /* Algunas preguntas cambian si el servicio es para un negocio. */
-const isBusiness = (answers = {}) => answers.property === "negocio";
+const isBusiness = (answers = {}) => answers.property === "negocio" || answers.housing === "negocio";
 
 const METHOD_ES = { whatsapp: "WhatsApp", llamada: "llamada", texto: "mensaje de texto", correo: "correo electrónico" };
 const METHOD_EN = { whatsapp: "WhatsApp", llamada: "phone call", texto: "text message", correo: "email" };
@@ -24,12 +24,12 @@ const es = {
   restart: "Empezar de nuevo",
   you: "Tú",
   bot: "Vínculos 360",
-  greeting: "¡Hola! 👋 Te ayudo a revisar opciones de servicios para tu hogar. Son unas pocas preguntas.",
+  greeting: "¡Hola! 👋 Te ayudo a revisar opciones de servicios para tu casa o tu negocio. Son unas pocas preguntas.",
   serviceQuestion: "¿Qué servicio te interesa?",
   services: {
     electricidad: "Electricidad y ahorro",
-    internet: "Internet para el hogar",
-    seguridad: "Seguridad del hogar",
+    internet: "Internet",
+    seguridad: "Seguridad y monitoreo",
     otros: "Otros servicios",
   },
   questions: {
@@ -63,8 +63,8 @@ const es = {
           : { trabajo: "Trabajo o estudio desde casa", streaming: "Películas, series y juegos", basico: "Uso básico (redes, correo)" },
     },
     housing: {
-      text: "¿En qué tipo de vivienda vives?",
-      options: { propia: "Casa propia", rentada: "Casa rentada", apartamento: "Apartamento" },
+      text: "¿Dónde lo quieres instalar?",
+      options: { propia: "Casa propia", rentada: "Casa rentada", apartamento: "Apartamento", negocio: "Un negocio" },
     },
     interest: {
       text: "¿Qué te interesa más?",
@@ -76,7 +76,7 @@ const es = {
     },
     otherType: {
       text: "¿Qué otro servicio te interesa?",
-      options: { movil: "Telefonía celular", fija: "Teléfono de casa", otro: "Otro servicio del hogar" },
+      options: { movil: "Telefonía celular", fija: "Teléfono de casa", otro: "Otro servicio" },
     },
   },
   zipQuestion: (a) => `¿Cuál es el ZIP Code de ${isBusiness(a) ? "tu negocio" : "tu casa"}? Así revisamos qué opciones hay en tu zona.`,
@@ -139,12 +139,12 @@ const en = {
   restart: "Start over",
   you: "You",
   bot: "Vínculos 360",
-  greeting: "Hi! 👋 I can help you review service options for your home. Just a few quick questions.",
+  greeting: "Hi! 👋 I can help you review service options for your home or business. Just a few quick questions.",
   serviceQuestion: "Which service are you interested in?",
   services: {
     electricidad: "Electricity & savings",
-    internet: "Home internet",
-    seguridad: "Home security",
+    internet: "Internet",
+    seguridad: "Security & monitoring",
     otros: "Other services",
   },
   questions: {
@@ -178,8 +178,8 @@ const en = {
           : { trabajo: "Working or studying from home", streaming: "Movies, shows and gaming", basico: "Basic use (social media, email)" },
     },
     housing: {
-      text: "What type of home do you live in?",
-      options: { propia: "House I own", rentada: "House I rent", apartamento: "Apartment" },
+      text: "Where do you want it installed?",
+      options: { propia: "House I own", rentada: "House I rent", apartamento: "Apartment", negocio: "A business" },
     },
     interest: {
       text: "What interests you most?",
@@ -191,7 +191,7 @@ const en = {
     },
     otherType: {
       text: "Which other service are you interested in?",
-      options: { movil: "Cell phone service", fija: "Home phone", otro: "Another home service" },
+      options: { movil: "Cell phone service", fija: "Home phone", otro: "Another service" },
     },
   },
   zipQuestion: (a) => `What's ${isBusiness(a) ? "your business's" : "your home"} ZIP Code? That way we can check the options in your area.`,

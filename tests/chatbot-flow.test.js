@@ -170,6 +170,18 @@ test("si es para un negocio, las preguntas hablan del negocio y no del hogar", (
   assert.match(resolveText(es.zipQuestion, {}), /tu casa/);
 });
 
+test("el saludo y los servicios no asumen hogar; seguridad acepta negocio", () => {
+  for (const s of Object.values(CHAT_STRINGS)) {
+    assert.doesNotMatch(s.greeting + s.serviceQuestion + Object.values(s.services).join(" "), /hogar|\bhome\b(?! or)/i);
+  }
+  assert.match(CHAT_STRINGS.es.greeting, /casa o tu negocio/);
+  const negocio = { housing: "negocio" };
+  assert.match(resolveText(CHAT_STRINGS.es.questions.decision.text, negocio), /tu negocio/);
+  let st = answer(INITIAL_STATE, "service", "seguridad");
+  for (const [id, v] of [["housing", "negocio"], ["interest", "camaras"], ["timeline", "pronto"], ["decision", "si"]]) st = answer(st, `q:${id}`, v);
+  assert.deepEqual(prequalify(answer(st, "zipCode", "77001")).reasons, ["negocio"]);
+});
+
 test("electricidad usa 'energía eléctrica', no 'luz'", () => {
   const all = [{ property: "casa" }, { property: "negocio" }]
     .flatMap((ctx) => ["bill", "contract"].map((id) => resolveText(CHAT_STRINGS.es.questions[id].text, ctx)))
