@@ -50,7 +50,7 @@ export default function MobileCtaBar() {
           tabIndex={hidden ? -1 : undefined}
           aria-haspopup="dialog"
           aria-controls="v360-chat"
-          className={`inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand-700 px-4 py-3 text-base font-semibold text-white ${
+          className={`inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand-700 px-4 whitespace-nowrap py-3 text-base font-semibold text-white ${
             attention ? "animate-attention" : ""
           }`}
         >

@@ -161,7 +161,7 @@ const es = {
     rights: "Todos los derechos reservados.",
   },
 
-  mobileBar: { call: "Llamar", request: "Revisar mis opciones" },
+  mobileBar: { call: "Llamar", request: "Revisar opciones" },
 
   whatsapp: {
     default: "Hola, vi Vínculos 360 y quisiera información sobre servicios para mi hogar.",
@@ -330,7 +330,7 @@ const en = {
     rights: "All rights reserved.",
   },
 
-  mobileBar: { call: "Call", request: "Check my options" },
+  mobileBar: { call: "Call", request: "Check options" },
 
   whatsapp: {
     default: "Hi, I saw Vínculos 360 and I'd like information about services for my home.",
