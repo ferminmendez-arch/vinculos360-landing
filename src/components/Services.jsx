@@ -1,9 +1,9 @@
-import { ArrowRight, Cctv, CircleCheck, Plus, Wifi, Zap } from "lucide-react";
+import { ArrowRight, Cctv, CircleCheck, CreditCard, Plus, ShieldCheck, Smartphone, Tv, Wifi, Zap } from "lucide-react";
 import { SERVICES } from "../content.js";
 import { useStrings } from "../i18n.js";
 import { SectionHeading } from "./ui.jsx";
 
-const ICONS = { electricidad: Zap, internet: Wifi, seguridad: Cctv, otros: Plus };
+const ICONS = { electricidad: Zap, internet: Wifi, seguridad: Cctv, television: Tv, celular: Smartphone, identidad: ShieldCheck, pagos: CreditCard, otros: Plus };
 
 const TONES = {
   orange: {
@@ -45,7 +45,7 @@ export default function Services({ selectedService, onSelect }) {
         />
 
         <ul className="mt-10 grid gap-5 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
-          {SERVICES.map((service) => {
+          {SERVICES.filter((s) => s.image).map((service) => {
             const Icon = ICONS[service.slug];
             const tone = TONES[service.tone];
             const copy = t.services.items[service.slug];
@@ -85,6 +85,43 @@ export default function Services({ selectedService, onSelect }) {
                     <span className="block text-xl font-bold text-slate-900">{copy.title}</span>
                     <span className="mt-2 block flex-1 text-[0.95rem] leading-7 text-slate-600">{copy.description}</span>
                     <span className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold ${tone.cta}`}>
+                      {isSelected ? t.services.selected : t.services.select}
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <h3 className="mt-12 text-lg font-bold text-slate-900">{t.services.moreTitle}</h3>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {SERVICES.filter((s) => !s.image).map((service) => {
+            const Icon = ICONS[service.slug];
+            const tone = TONES[service.tone];
+            const copy = t.services.items[service.slug];
+            const isSelected = selectedService === service.value;
+            return (
+              <li key={service.value} className="flex">
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => onSelect(service.value, { scroll: true })}
+                  className={`group flex w-full items-start gap-4 rounded-2xl border-2 bg-white p-5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                    isSelected ? `${tone.selected} shadow-lg` : `border-slate-200 ${tone.hover}`
+                  }`}
+                >
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone.icon}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2 font-bold text-slate-900">
+                      {copy.title}
+                      {isSelected && <CircleCheck className="h-5 w-5 shrink-0 text-wa-600" aria-hidden="true" />}
+                    </span>
+                    <span className="mt-1 block text-sm leading-6 text-slate-600">{copy.description}</span>
+                    <span className={`mt-2 inline-flex items-center gap-1.5 text-sm font-semibold ${tone.cta}`}>
                       {isSelected ? t.services.selected : t.services.select}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                     </span>

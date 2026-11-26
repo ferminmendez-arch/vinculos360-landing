@@ -21,7 +21,11 @@ const CHOICES = {
   electricidad: { property: "casa", decision: "si", bill: "150", kwh: "1000", contract: "vencepronto" },
   internet: { property: "casa", situation: "mejorar", usage: "trabajo", decision: "compartida" },
   seguridad: { housing: "propia", interest: "ambos", timeline: "pronto", decision: "si" },
-  otros: { otherType: "movil", property: "casa", decision: "si" },
+  television: { property: "casa", tvCurrent: "cable", decision: "si" },
+  celular: { lines: "dosatres", phonePlan: "prepago", decision: "si" },
+  identidad: { coverage: "familia", decision: "compartida" },
+  pagos: { businessType: "restaurante", cardVolume: "5ka20k", currentPayments: "tiene", decision: "si" },
+  otros: { otherType: "fija", property: "casa", decision: "si" },
 };
 
 function complete(serviceKey, { method = "whatsapp", zip = "77494" } = {}) {
@@ -143,7 +147,9 @@ test("todos los textos existen en español e inglés", () => {
 test("los textos públicos del chat pasan el verificador de afirmaciones (sin proveedores, garantías ni cifras de ahorro)", async () => {
   const { lintText } = await import("../automation/content/claims-lint.mjs");
   for (const [lang, s] of Object.entries(CHAT_STRINGS)) {
-    const { questions } = s;
+    // Los rangos de ventas con tarjeta ("Menos de $5,000") son opciones de respuesta, no afirmaciones.
+    const { cardVolume, ...questions } = s.questions;
+    assert.ok(cardVolume);
     const contextual = [{ property: "casa" }, { property: "negocio" }].flatMap((ctx) => [
       resolveText(s.zipQuestion, ctx),
       ...Object.values(questions).flatMap((q) => [resolveText(q.text, ctx), ...Object.values(resolveText(q.options, ctx) || {})]),
@@ -192,7 +198,20 @@ test("el saludo y los servicios no asumen hogar; seguridad acepta negocio", () =
   assert.match(resolveText(CHAT_STRINGS.es.questions.decision.text, negocio), /tu negocio/);
   let st = answer(INITIAL_STATE, "service", "seguridad");
   for (const [id, v] of [["housing", "negocio"], ["interest", "camaras"], ["timeline", "pronto"], ["decision", "si"]]) st = answer(st, `q:${id}`, v);
-  assert.deepEqual(prequalify(answer(st, "zipCode", "77001")).reasons, ["negocio"]);
+  // Desde nov. 2026 los negocios también cuentan como precalificados.
+  assert.deepEqual(prequalify(answer(st, "zipCode", "77001")).reasons, []);
+});
+
+test("servicios nuevos: TV, celular, identidad y pagos (negocio)", () => {
+  const es = CHAT_STRINGS.es;
+  for (const key of ["television", "celular", "identidad", "pagos"]) assert.ok(es.services[key] && CHAT_STRINGS.en.services[key]);
+  let st = answer(INITIAL_STATE, "service", "pagos");
+  st = answer(answer(answer(st, "q:businessType", "tienda"), "q:cardVolume", "mas20k"), "q:currentPayments", "notiene");
+  assert.match(resolveText(es.questions.decision.text, st.answers), /tu negocio/, "pagos siempre es negocio");
+  assert.match(resolveText(es.zipQuestion, st.answers), /tu negocio/);
+  st = answer(st, "q:decision", "si");
+  assert.equal(nextStep(st).id, "zipCode");
+  assert.equal(prequalify(answer(st, "zipCode", "77001")).prequalified, true);
 });
 
 test("electricidad usa 'energía eléctrica', no 'luz'", () => {

@@ -35,7 +35,7 @@ var RECEPTOR = {
   EXTRA_KEYS: ["channel", "language", "email", "preferredContact", "consent", "consentVersion", "consentAt", "qualification", "answers", "chatLeadId"],
   METRICS_SHEET: "Chatbot",
   METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified"],
-  SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Otros servicios"],
+  SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos", "Otros servicios"],
   MAX_BODY: 5000,
   MAX_FIELD: 300,
 };

@@ -30,7 +30,7 @@ const es = {
   facebook: "Síguenos en Facebook",
 
   hero: {
-    badge: "Electricidad · Internet · Seguridad · Otros servicios",
+    badge: "Electricidad · Internet · Seguridad · TV · Celular y más",
     titleStart: "Los servicios esenciales de tu hogar,",
     titleHighlight: "en un solo lugar",
     text: "Somos representantes independientes. Te explicamos de forma clara las opciones de electricidad, internet, seguridad y otros servicios esenciales de los proveedores con los que trabajamos, para que elijas lo que mejor se adapte a tu hogar.",
@@ -53,7 +53,7 @@ const es = {
       electricidad: {
         title: "Electricidad",
         description:
-          "Revisa opciones de electricidad disponibles para tu hogar y conoce alternativas que se adapten a tus necesidades.",
+          "Revisa opciones de electricidad disponibles para tu hogar o negocio y conoce alternativas que se adapten a tus necesidades.",
       },
       internet: {
         title: "Internet",
@@ -64,11 +64,28 @@ const es = {
         description:
           "Protege tu hogar con cámaras de seguridad y monitoreo. Te orientamos para elegir la opción que mejor se adapte a tu casa.",
       },
+      television: {
+        title: "Televisión",
+        description: "Opciones de TV para tu casa o negocio según lo que hay disponible en tu zona.",
+      },
+      celular: {
+        title: "Telefonía celular",
+        description: "Te orientamos para elegir un plan de celular para ti o tu familia.",
+      },
+      identidad: {
+        title: "Protección de identidad",
+        description: "Servicios de monitoreo y alertas que te ayudan a detectar el uso indebido de tus datos personales.",
+      },
+      pagos: {
+        title: "Procesamiento de pagos",
+        description: "Para negocios: opciones para aceptar pagos con tarjeta.",
+      },
       otros: {
         title: "Otros servicios",
-        description: "También podemos orientarte sobre telefonía y otros servicios esenciales para tu hogar.",
+        description: "Cuéntanos qué necesitas y te orientamos sobre otros servicios esenciales para tu hogar o negocio.",
       },
     },
+    moreTitle: "También te ayudamos con",
   },
 
   steps: {
@@ -187,7 +204,7 @@ const en = {
   facebook: "Follow us on Facebook",
 
   hero: {
-    badge: "Electricity · Internet · Security · Other services",
+    badge: "Electricity · Internet · Security · TV · Mobile & more",
     titleStart: "Your home's essential services,",
     titleHighlight: "all in one place",
     text: "We are independent representatives. We clearly explain electricity, internet, security and other essential service options from the providers we work with, so you can choose what best fits your home.",
@@ -209,7 +226,7 @@ const en = {
     items: {
       electricidad: {
         title: "Electricity",
-        description: "Review the electricity options available for your home and find alternatives that fit your needs.",
+        description: "Review the electricity options available for your home or business and find alternatives that fit your needs.",
       },
       internet: {
         title: "Internet",
@@ -220,11 +237,28 @@ const en = {
         description:
           "Protect your home with security cameras and monitoring. We'll help you choose the option that best fits your home.",
       },
+      television: {
+        title: "Television",
+        description: "TV options for your home or business based on what's available in your area.",
+      },
+      celular: {
+        title: "Mobile phone",
+        description: "We help you choose a mobile plan for you or your family.",
+      },
+      identidad: {
+        title: "Identity protection",
+        description: "Monitoring and alert services that help you detect misuse of your personal information.",
+      },
+      pagos: {
+        title: "Payment processing",
+        description: "For businesses: options to accept card payments.",
+      },
       otros: {
         title: "Other services",
-        description: "We can also guide you on phone service and other essential services for your home.",
+        description: "Tell us what you need and we'll guide you on other essential services for your home or business.",
       },
     },
+    moreTitle: "We can also help with",
   },
 
   steps: {

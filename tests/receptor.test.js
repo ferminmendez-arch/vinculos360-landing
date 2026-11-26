@@ -213,3 +213,11 @@ test("v2: métricas del chatbot por día, sin datos personales", () => {
   assert.deepEqual([...env.metricRows[1]], ["'2026-11-23", 2, 0, 1, 0]);
   assert.equal(env.rows.length, 0, "un evento nunca escribe en Leads");
 });
+
+test("v3: acepta los servicios nuevos (TV, celular, identidad, pagos)", () => {
+  for (const service of ["Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos"]) {
+    const env = createEnv();
+    assert.equal(env.post({ ...PAYLOAD, service }).ok, true, service);
+  }
+  assert.equal(createEnv().post({ ...PAYLOAD, service: "Hipotecas" }).ok, false);
+});
