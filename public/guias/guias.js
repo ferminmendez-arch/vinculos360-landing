@@ -11,7 +11,7 @@
     var hasCampaign = params.get("utm_source") || params.get("fbclid");
     if (hasCampaign || !sessionStorage.getItem(KEY)) {
       var ref = "";
-      try { var h = new URL(document.referrer).hostname; if (h !== location.hostname) ref = h; } catch (e) { ref = ""; }
+      try { var h = new URL(document.referrer).hostname; if (h !== location.hostname) ref = h; } catch { ref = ""; }
       sessionStorage.setItem(KEY, JSON.stringify({
         utmSource: params.get("utm_source") || "",
         utmMedium: params.get("utm_medium") || "",
@@ -21,7 +21,7 @@
         referrerHost: ref
       }));
     }
-  } catch (e) { /* sin almacenamiento */ }
+  } catch { /* sin almacenamiento */ }
 
   var script = document.currentScript;
   var id = script && script.getAttribute("data-ga");
@@ -43,7 +43,7 @@
       if (!(navigator.sendBeacon && navigator.sendBeacon("/api/chat-event", new Blob([body], { type: "application/json" })))) {
         fetch("/api/chat-event", { method: "POST", headers: { "Content-Type": "application/json" }, body: body, keepalive: true }).catch(function () {});
       }
-    } catch (e) { /* sin métricas */ }
+    } catch { /* sin métricas */ }
   }
 
   document.addEventListener("click", function (e) {

@@ -1,3 +1,4 @@
+/* global V360, v360EnsureSheet, v360LoadAll, v360Log, v360Settings, v360Spreadsheet -- definidas en LeadAgent.js (mismo proyecto de Apps Script) */
 /* =========================================================
    VÍNCULOS 360 — AGENTE DE INTELIGENCIA DE BÚSQUEDA (Google)
 
@@ -221,7 +222,7 @@ function gsiPost(url, body) {
   var code = res.getResponseCode();
   var text = res.getContentText();
   if (code !== 200) {
-    var reason = "";
+    var reason;
     try { reason = JSON.parse(text).error.message; } catch (e) { reason = text.slice(0, 160); }
     throw new Error("HTTP " + code + ": " + reason);
   }
