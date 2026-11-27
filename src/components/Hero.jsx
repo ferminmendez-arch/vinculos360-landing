@@ -1,4 +1,4 @@
-import { ArrowRight, CircleCheck, MessageCircle } from "lucide-react";
+import { ArrowRight, CircleCheck, MessageCircle, Zap } from "lucide-react";
 import { useStrings } from "../i18n.js";
 import { WhatsAppLink } from "./ui.jsx";
 
@@ -41,6 +41,15 @@ export default function Hero() {
               {t.hero.whatsapp}
             </WhatsAppLink>
           </div>
+
+          <a
+            href="#analizador"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700 underline-offset-4 hover:underline sm:text-base"
+          >
+            <Zap className="h-5 w-5 shrink-0 text-accent-700" aria-hidden="true" />
+            {t.hero.analyzerLink}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
 
           <ul className="mt-8 grid gap-3 sm:grid-cols-3 sm:gap-4">
             {t.benefits.map((item) => (

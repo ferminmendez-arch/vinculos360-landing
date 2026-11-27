@@ -14,7 +14,8 @@
 ========================================================= */
 
 import { interpretResponse, sendLead } from "../leads.js";
-import { SERVICE_VALUES, savingsEstimate, sheetDevice } from "../../../api/src/lib/rules.js";
+import { SERVICE_VALUES, answersSummary, channelFor, savingsEstimate, sheetDevice } from "../../../api/src/lib/rules.js";
+import { analyzerFields } from "../../../api/src/lib/sinks.js";
 
 export const LEADS_API = "/api/leads";
 export const EVENTS_API = "/api/chat-event";
@@ -33,12 +34,14 @@ export function toSheetPayload(payload) {
     ad: payload.ad,
     fbclid: payload.fbclid,
     device: sheetDevice(payload.device, savingsEstimate(payload).level),
-    channel: "chatbot",
+    channel: channelFor(payload.entry),
     language: payload.language,
     email: payload.email,
     preferredContact: payload.preferredContact,
     consent: payload.consent ? "sí" : "",
     consentVersion: payload.consentVersion,
+    answers: answersSummary(payload.serviceKey, payload.answers, { entry: payload.entry, contractEnd: payload.contractEnd }),
+    ...analyzerFields({ ...payload, contractEnd: payload.contractEnd || "" }),
   };
 }
 

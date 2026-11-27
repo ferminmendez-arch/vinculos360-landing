@@ -3,6 +3,7 @@ import { ArrowLeft, CircleAlert, CircleCheck, LoaderCircle, MessageCircle, Rotat
 import { CHAT_STRINGS, resolveText } from "../lib/chatbot/strings.js";
 import {
   INITIAL_STATE,
+  prefillFromAnalyzer,
   SKIP,
   answer,
   answeredSteps,
@@ -95,9 +96,11 @@ function UserBubble({ children, label }) {
 
 /* ---------- Panel ---------- */
 
-export default function ChatPanel({ open, onClose, lang }) {
+export default function ChatPanel({ open, onClose, lang, prefill = null }) {
   const s = CHAT_STRINGS[lang] || CHAT_STRINGS.es;
-  const [state, setState] = useState(INITIAL_STATE);
+  // Desde el Analizador de factura el chat empieza en Electricidad con sus datos ya contestados.
+  // Chatbot.jsx monta un panel nuevo (key) por cada solicitud del analizador.
+  const [state, setState] = useState(() => (prefill?.analyzer ? prefillFromAnalyzer(prefill.analyzer) : INITIAL_STATE));
   const [draft, setDraft] = useState("");
   const [inputError, setInputError] = useState("");
   const [consent, setConsent] = useState(false);
@@ -106,7 +109,7 @@ export default function ChatPanel({ open, onClose, lang }) {
   const [status, setStatus] = useState("idle"); // idle | submitting | confirmed | rejected | offline | unverified
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const openedAt = useRef(0);
-  const startedRef = useRef(false);
+  const startedRef = useRef(Boolean(prefill?.analyzer)); // chat_start ya se contó al abrir desde el analizador
   const submittingRef = useRef(false);
   const logRef = useRef(null);
   const panelRef = useRef(null);
@@ -119,6 +122,7 @@ export default function ChatPanel({ open, onClose, lang }) {
   useEffect(() => {
     if (!openedAt.current) openedAt.current = performance.now();
   }, []);
+
 
   // Escape cierra el chat.
   useEffect(() => {

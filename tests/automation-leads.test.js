@@ -321,3 +321,87 @@ test("el mensaje de inscripción usa la propiedad ENROLL_URL_ELECTRICIDAD y no s
 function e0() {
   return env();
 }
+
+/* ---------- Analizador de factura (nov. 2026): canal y embudo en el Panel ---------- */
+
+test("canal del lead: Energy Bill Analyzer, Chatbot o Formulario", () => {
+  const e = env();
+  const values = [
+    ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Channel", "LeadSource"],
+    ["2026-12-01T10:00:00Z", "Prueba A", "2815550101", "77036", "Electricidad", "analizador", "Energy Bill Analyzer"],
+    ["2026-12-01T11:00:00Z", "Prueba B", "2815550102", "77036", "Electricidad", "chatbot", ""],
+    ["2026-12-01T12:00:00Z", "Prueba C", "2815550103", "77036", "Internet", "formulario", ""],
+  ];
+  const leads = e.gas.v360ReadLeads(toSheetValues(values));
+  assert.deepEqual([...leads.map((l) => l.channel)], ["Energy Bill Analyzer", "Chatbot", "Formulario"]);
+});
+
+test("embudo: suma los contadores de la pestaña Chatbot dentro del periodo de la meta", () => {
+  const e = env();
+  const values = [
+    ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
+    ["'2026-11-29", 9, 9, 9, 9, 9, 9, 9],
+    ["'2026-11-30", 4, 3, 2, 1, 10, 6, 2],
+    ["'2026-12-01", 1, 1, 0, 0, 5, 2, 1],
+  ];
+  const f = e.gas.v360ReadFunnel(values, new Date("2026-11-30T00:00:00"), new Date("2026-12-30T00:00:00"));
+  assert.equal(f.analyzer_view, 15);
+  assert.equal(f.analyzer_calc, 8);
+  assert.equal(f.analyzer_cta, 3);
+  assert.equal(f.chat_complete, 2);
+  // Una pestaña v2 (sin columnas del analizador) da ceros, no error.
+  const old = e.gas.v360ReadFunnel([values[0].slice(0, 5), ["'2026-12-01", 1, 1, 1, 0]], null, null);
+  assert.equal(old.analyzer_view, 0);
+  assert.equal(old.chat_open, 1);
+});
+
+test("Panel: muestra leads por canal y el embudo del analizador", () => {
+  const e = env();
+  const leads = e.gas.v360ClassifyLeads(
+    e.gas.v360ReadLeads(
+      toSheetValues([
+        ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Channel", "LeadSource"],
+        // Datos sintéticos que no parecen prueba (si no, el agente los excluye del conteo).
+        ["2026-12-01T10:00:00Z", "Lucía Ficticia", "7130009999", "77036", "Electricidad", "analizador", "Energy Bill Analyzer"],
+      ])
+    )
+  );
+  const funnel = { chat_open: 3, chat_start: 2, chat_complete: 1, chat_qualified: 1, analyzer_view: 12, analyzer_calc: 5, analyzer_cta: 2 };
+  const m = e.gas.v360ComputeMetrics(leads, {}, [], { goalStart: null, goalDays: 30, goalQualified: 10, budgetCap: 50, funnel }, new Date("2026-12-02T12:00:00Z"));
+  const text = e.gas.v360PanelRows(m).map((r) => r.join(" = ")).join("\n");
+  assert.match(text, /Energy Bill Analyzer = 1 \(0\)/);
+  assert.match(text, /Visitas al analizador de factura = 12/);
+  assert.match(text, /Solicitudes de comparación = 2/);
+});
+
+/* ---------- Recordatorios de vencimiento (nov. 2026) ---------- */
+test("recordatorios: avisa al dueño 30 días antes, una sola vez, y respeta 'No contactar'", () => {
+  const head = ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Source", "Medium", "Campaign", "Ad", "Fbclid", "Device", "LeadId", "Channel", "ContractExpiration"];
+  const soon = new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10);
+  const later = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+  const rows = [head,
+    ["2026-11-20T15:00:00Z", "Rosa Sintética", "(713) 000-3333", "77036", "Electricidad", "facebook", "", "", "", "", "Mobile", "L1", "recordatorio", soon],
+    ["2026-11-20T16:00:00Z", "Luis Sintético", "(713) 000-4444", "77084", "Electricidad", "facebook", "", "", "", "", "Mobile", "L2", "recordatorio", later],
+    ["2026-11-20T17:00:00Z", "Prueba QA", "(281) 555-0101", "77084", "Electricidad", "", "", "", "", "", "Mobile", "L3", "recordatorio", soon]];
+  const e = createAppsScriptEnv({ sheets: { Leads: toSheetValues(rows) }, props: PROPS });
+  e.gas.processNewLeads();
+  const rem = e.sheet("Recordatorios").values;
+  assert.equal(rem.length, 2, "solo Rosa: Luis vence en 90 días y la fila de prueba no cuenta");
+  assert.equal(rem[1][1], "Rosa Sintética");
+  assert.match(rem[1][8], /^https:\/\/wa\.me\/17130003333\?text=/);
+  assert.match(decodeURIComponent(rem[1][8]), /vence el .*respóndeme "NO"/);
+  const alerts = e.emails.filter((m) => /por vencer/.test(m.subject));
+  assert.equal(alerts.length, 1);
+  assert.doesNotMatch(alerts[0].htmlBody, /713|000-3333/, "sin teléfonos en el correo");
+  e.gas.processNewLeads();
+  assert.equal(e.sheet("Recordatorios").values.length, 2, "no se repite");
+  assert.equal(e.emails.filter((m) => /por vencer/.test(m.subject)).length, 1);
+});
+
+test("recordatorios: no avisa si el lead pidió 'No contactar' o ya es cliente", () => {
+  const e = createAppsScriptEnv({ sheets: { Leads: [[]] }, props: PROPS });
+  const now = new Date("2026-12-01T12:00:00Z");
+  const lead = (key, extra = {}) => ({ key, phone: "7130005555", status: "Nuevo", contractEnd: "2026-12-20", name: "Ana", zip: "77036", ...extra });
+  const due = e.gas.v360DueReminders([lead("a"), lead("b"), lead("c"), lead("d", { contractEnd: "" })], now, {}, { b: "No contactar", c: "Inscrito" }, 30);
+  assert.deepEqual(due.map((l) => l.key), ["a"]);
+});

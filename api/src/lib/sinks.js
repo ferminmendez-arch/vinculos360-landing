@@ -9,7 +9,22 @@
       cambiar ni borrar registros (mínimo privilegio).
 ========================================================= */
 
-import { answersSummary, sheetDevice } from "./rules.js";
+import { ENTRY_LABELS, answersSummary, channelFor, effectiveCents, isNumberAnswer, sheetDevice } from "./rules.js";
+
+/* Columnas del analizador de factura (receptor v4). Vacías si no aplican. */
+export function analyzerFields(lead) {
+  const a = lead.answers || {};
+  const hasBill = lead.serviceKey === "electricidad" && isNumberAnswer(a.bill);
+  const hasKwh = hasBill && isNumberAnswer(a.kwh);
+  const cents = hasKwh ? effectiveCents(a.bill, a.kwh) : null;
+  return {
+    billAmount: hasBill ? String(a.bill) : "",
+    monthlyKwh: hasKwh ? String(a.kwh) : "",
+    effectiveCentsKwh: cents == null ? "" : String(cents),
+    contractExpiration: lead.contractEnd || "",
+    leadSource: ENTRY_LABELS[lead.entry] || ENTRY_LABELS.chat,
+  };
+}
 
 export const DEFAULT_SHEET_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbwEVckFhVLHNjrMFNDbYe0N88ikApHK64Z2oB2RJH18nDqA7r02xrwSxYE8L5dzhLNm/exec";
@@ -118,7 +133,9 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons,
     Ad: cell(lead.ad),
     Fbclid: cell(lead.fbclid),
     Device: lead.device,
-    Channel: "chatbot",
+    Channel: channelFor(lead.entry),
+    LeadSource: ENTRY_LABELS[lead.entry] || ENTRY_LABELS.chat,
+    ...(lead.contractEnd ? { ContractExpiration: lead.contractEnd } : {}),
   };
 }
 
@@ -138,7 +155,7 @@ export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = 
     fbclid: lead.fbclid,
     // "Mobile · Chatbot": el canal queda visible en la hoja desde hoy, sin cambiar el receptor.
     device: sheetDevice(lead.device, savings.level),
-    channel: "chatbot",
+    channel: channelFor(lead.entry),
     language: lead.language,
     email: lead.email,
     preferredContact: lead.preferredContact,
@@ -146,7 +163,9 @@ export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = 
     consentVersion: lead.consentVersion,
     consentAt: receivedAt,
     qualification: prequalified ? "Precalificado" : "Revisar",
-    answers: answersSummary(lead.serviceKey, lead.answers, { tdu }),
+    answers: answersSummary(lead.serviceKey, lead.answers, { tdu, entry: lead.entry, contractEnd: lead.contractEnd }),
     chatLeadId: id,
+    // Receptor v4: columnas propias. Un receptor anterior las ignora (ya van en "answers").
+    ...analyzerFields(lead),
   };
 }

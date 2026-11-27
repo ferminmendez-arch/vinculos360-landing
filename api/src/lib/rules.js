@@ -123,7 +123,89 @@ export const DEVICES = ["Mobile", "Tablet", "Desktop"];
    src/lib/chatbot/strings.js, sube esta versión. */
 export const CONSENT_VERSION = "2026-11-v1";
 
-export const EVENT_NAMES = ["chat_open", "chat_start", "chat_complete", "chat_qualified"];
+export const EVENT_NAMES = [
+  "chat_open",
+  "chat_start",
+  "chat_complete",
+  "chat_qualified",
+  // Analizador de factura (nov. 2026): vista de la sección, cálculo hecho y clic en "comparación personalizada".
+  "analyzer_view",
+  "analyzer_calc",
+  "analyzer_cta",
+  // Recordatorio de vencimiento y "compartir" del analizador (nov. 2026).
+  "analyzer_share",
+  "reminder_signup",
+];
+
+/* Punto de entrada del lead. "analizador" = llegó desde el Analizador de factura. */
+export const ENTRY_POINTS = ["chat", "analizador", "recordatorio"];
+export const ENTRY_LABELS = { chat: "Chatbot", analizador: "Energy Bill Analyzer", recordatorio: "Recordatorio de vencimiento" };
+
+/* Canal que se guarda en la hoja según el punto de entrada. */
+export function channelFor(entry) {
+  return entry === "analizador" || entry === "recordatorio" ? entry : "chatbot";
+}
+
+/* Consentimiento propio del recordatorio de vencimiento (texto en src/lib/analyzerStrings.js).
+   Si cambias ese texto, sube esta versión. */
+export const REMINDER_CONSENT_VERSION = "2026-11-r1";
+/* Días antes del vencimiento en que se avisa al dueño para que escriba al cliente. */
+export const REMINDER_DAYS_BEFORE = 30;
+export const SITE_URL_FOR_SHARE = "https://www.vinculos360.com";
+
+/* ---------- Analizador de factura ---------- */
+
+/* Costo promedio efectivo (¢/kWh) = total del servicio eléctrico ÷ kWh.
+   Incluye cargos fijos, de entrega e impuestos: NO es la tarifa del contrato. */
+export function effectiveCents(bill, kwh) {
+  const b = Number(parseAmount(bill));
+  const k = Number(parseAmount(kwh));
+  if (!(b > 0) || !(k > 0)) return null;
+  const rate = (b / k) * 100;
+  if (!Number.isFinite(rate) || rate < 5 || rate > 60) return null; // casi seguro un dato mal escrito
+  return Math.round(rate * 10) / 10;
+}
+
+/* Comparación con el promedio residencial de Texas (EIA). Mismos umbrales que el chatbot. */
+export function compareToAverage(cents, avg = TX_RESIDENTIAL_AVG) {
+  if (cents == null) return { level: "sin_datos" };
+  const ratio = cents / avg.cents;
+  const level = ratio >= 1.1 ? "alta" : ratio <= 0.9 ? "baja" : "media";
+  return { level, rateCents: cents, avgCents: avg.cents, diffPct: Math.round((ratio - 1) * 100) };
+}
+
+/* "2027-01-15" válido (fecha real, entre hace 2 años y dentro de 6). */
+export function parseContractEnd(value, today = new Date()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? "").trim());
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  if (d.getUTCMonth() !== Number(m[2]) - 1 || d.getUTCDate() !== Number(m[3])) return null;
+  const year = today.getUTCFullYear();
+  if (Number(m[1]) < year - 2 || Number(m[1]) > year + 6) return null;
+  return m[0];
+}
+
+/* Estado del contrato según su fecha de vencimiento.
+   PUCT: el proveedor avisa al menos 30 días antes y el cliente residencial puede cambiar
+   sin cargo por cancelación anticipada desde 14 días antes del vencimiento.
+   status: "vencido" | "ventana" (≤14 días) | "pronto" (≤60) | "despues" | "sin_dato". */
+export function contractStatus(contractEnd, today = new Date()) {
+  const iso = parseContractEnd(contractEnd, today);
+  if (!iso) return { status: "sin_dato" };
+  const end = Date.parse(`${iso}T00:00:00Z`);
+  const start = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const days = Math.round((end - start) / 86400000);
+  const status = days < 0 ? "vencido" : days <= 14 ? "ventana" : days <= 60 ? "pronto" : "despues";
+  return { status, days, date: iso };
+}
+
+/* Respuesta "contract" del chatbot a partir de la fecha del analizador. */
+export function contractAnswerFromDate(contractEnd, today = new Date()) {
+  const c = contractStatus(contractEnd, today);
+  if (c.status === "sin_dato") return "";
+  if (c.status === "vencido") return "sincontrato";
+  return c.status === "despues" ? "vencedespues" : "vencepronto";
+}
 
 /* Prefijos de ZIP de Texas donde la mayor parte del área no tiene
    opción de proveedor de electricidad (Austin, San Antonio, El Paso).
@@ -223,11 +305,13 @@ export function qualify({ serviceKey, answers = {}, zipCode, consent }) {
 }
 
 /* Resumen compacto de respuestas para la hoja: "property=casa; decision=si". */
-export function answersSummary(serviceKey, answers = {}, { tdu = "" } = {}) {
+export function answersSummary(serviceKey, answers = {}, { tdu = "", entry = "", contractEnd = "" } = {}) {
   const parts = (QUESTIONS[serviceKey] || []).filter((q) => answers[q.id]).map((q) => `${q.id}=${answers[q.id]}`);
   const est = savingsEstimate({ serviceKey, answers });
   if (est.level !== "sin_datos") parts.push(`precio_kwh=${est.rateCents}c`, `oportunidad=${est.level}`);
   if (tdu) parts.push(`distribuidora=${String(tdu).replace(/[;=]/g, " ")}`);
+  if (contractEnd) parts.push(`vence=${contractEnd}`);
+  if (entry && entry !== "chat") parts.push(`origen=${entry}`);
   return parts.join("; ");
 }
 
@@ -247,10 +331,13 @@ export function validateChatLead(data) {
   if (!SERVICE_KEYS.includes(serviceKey)) return { error: "invalid_service" };
 
   const raw = data.answers && typeof data.answers === "object" && !Array.isArray(data.answers) ? data.answers : {};
+  // El recordatorio de vencimiento solo trae factura, kWh y fecha: las demás preguntas son opcionales.
+  const isReminder = data.entry === "recordatorio" && serviceKey === "electricidad";
   const answers = {};
   for (const q of QUESTIONS[serviceKey]) {
     if (q.askIf && !q.askIf(answers)) continue; // pregunta que no aplica: se ignora lo que venga
     const value = String(raw[q.id] ?? "");
+    if (isReminder && value === "") continue;
     if (q.kind === "number") {
       const n = value === SKIP ? SKIP : parseAmount(value);
       if (n === null || (n !== SKIP && (Number(n) < q.min || Number(n) > q.max))) return { error: `invalid_answer_${q.id}` };
@@ -274,10 +361,15 @@ export function validateChatLead(data) {
   if (emailError) return { error: emailError };
 
   if (data.consent !== true) return { error: "consent_required" };
-  if (String(data.consentVersion || "") !== CONSENT_VERSION) return { error: "consent_version" };
+  const expectedConsent = isReminder ? REMINDER_CONSENT_VERSION : CONSENT_VERSION;
+  if (String(data.consentVersion || "") !== expectedConsent) return { error: "consent_version" };
 
   const language = LANGS.includes(data.language) ? data.language : "es";
   const device = DEVICES.includes(data.device) ? data.device : "";
+  const entry = ENTRY_POINTS.includes(data.entry) ? data.entry : "chat";
+  // Fecha opcional del analizador: si viene mal escrita se ignora (no bloquea el lead).
+  const contractEnd = serviceKey === "electricidad" ? parseContractEnd(data.contractEnd) || "" : "";
+  if (isReminder && !contractEnd) return { error: "invalid_contract_end" };
 
   const lead = {
     serviceKey,
@@ -289,7 +381,7 @@ export function validateChatLead(data) {
     email: cleanEmail(data.email),
     preferredContact,
     consent: true,
-    consentVersion: CONSENT_VERSION,
+    consentVersion: expectedConsent,
     language,
     source: shortText(data.source) || "Direct",
     medium: shortText(data.medium),
@@ -297,6 +389,8 @@ export function validateChatLead(data) {
     ad: shortText(data.ad),
     fbclid: shortText(data.fbclid),
     device,
+    entry,
+    contractEnd,
   };
   return { lead, savings: savingsEstimate({ serviceKey, answers }), ...qualify({ serviceKey, answers, zipCode: lead.zipCode, consent: true }) };
 }
