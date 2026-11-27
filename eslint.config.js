@@ -32,6 +32,8 @@ export default defineConfig([
         MailApp: 'readonly',
         Utilities: 'readonly',
         ScriptApp: 'readonly',
+        CacheService: 'readonly',
+        UrlFetchApp: 'readonly',
       },
     },
     rules: {
