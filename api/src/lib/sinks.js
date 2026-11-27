@@ -9,7 +9,7 @@
       cambiar ni borrar registros (mínimo privilegio).
 ========================================================= */
 
-import { ENTRY_LABELS, answersSummary, effectiveCents, isNumberAnswer, sheetDevice } from "./rules.js";
+import { ENTRY_LABELS, answersSummary, channelFor, effectiveCents, isNumberAnswer, sheetDevice } from "./rules.js";
 
 /* Columnas del analizador de factura (receptor v4). Vacías si no aplican. */
 export function analyzerFields(lead) {
@@ -133,7 +133,7 @@ export function leadToTableEntity(lead, { id, receivedAt, prequalified, reasons,
     Ad: cell(lead.ad),
     Fbclid: cell(lead.fbclid),
     Device: lead.device,
-    Channel: lead.entry === "analizador" ? "analizador" : "chatbot",
+    Channel: channelFor(lead.entry),
     LeadSource: ENTRY_LABELS[lead.entry] || ENTRY_LABELS.chat,
     ...(lead.contractEnd ? { ContractExpiration: lead.contractEnd } : {}),
   };
@@ -155,7 +155,7 @@ export function leadToSheetBody(lead, { id, receivedAt, prequalified, savings = 
     fbclid: lead.fbclid,
     // "Mobile · Chatbot": el canal queda visible en la hoja desde hoy, sin cambiar el receptor.
     device: sheetDevice(lead.device, savings.level),
-    channel: lead.entry === "analizador" ? "analizador" : "chatbot",
+    channel: channelFor(lead.entry),
     language: lead.language,
     email: lead.email,
     preferredContact: lead.preferredContact,

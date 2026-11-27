@@ -244,3 +244,51 @@ test("eventos del analizador se aceptan; nombres desconocidos no", async () => {
   );
   assert.equal(res.status, 202);
 });
+
+/* ---------- Recordatorio de vencimiento y compartir (nov. 2026) ---------- */
+import { buildReminderPayload, shareUrl, validateReminder } from "../src/lib/billAnalyzer.js";
+import { validateChatLead as validateForReminder, channelFor, REMINDER_CONSENT_VERSION, CONSENT_VERSION as CHAT_CONSENT } from "../api/src/lib/rules.js";
+import { leadToSheetBody as sheetBodyForReminder } from "../api/src/lib/sinks.js";
+
+const TODAY_R = new Date("2026-11-27T15:00:00Z");
+const GOOD_REMINDER = { contractEnd: "2027-03-15", name: "Prueba QA", phone: "(281) 555-0106", email: "", consent: true };
+
+test("recordatorio: valida fecha futura, nombre, WhatsApp y consentimiento", () => {
+  assert.ok(validateReminder(GOOD_REMINDER, TODAY_R).values);
+  const bad = validateReminder({ contractEnd: "2026-10-01", name: "", phone: "123", email: "x@", consent: false }, TODAY_R).errors;
+  assert.deepEqual(bad, { contractEnd: "date_past", name: "name_required", phone: "phone_invalid", email: "email_invalid", consent: "consent_required" });
+  assert.equal(validateReminder({ ...GOOD_REMINDER, contractEnd: "" }, TODAY_R).errors.contractEnd, "date_required");
+});
+
+test("recordatorio: el cuerpo pasa la validación del servidor sin inventar respuestas", () => {
+  const { values } = validateReminder(GOOD_REMINDER, TODAY_R);
+  const payload = buildReminderPayload({ bill: "180", kwh: "1100", zipCode: "77036", contractEnd: "" }, values, { language: "es", tracking: { source: "facebook", ad: "OPP-1" }, elapsedMs: 9000 }, TODAY_R);
+  assert.equal(payload.entry, "recordatorio");
+  assert.equal(payload.consentVersion, REMINDER_CONSENT_VERSION);
+  assert.equal(payload.answers.property, undefined, "no se inventa casa/negocio");
+  const checked = validateForReminder(payload);
+  assert.ok(checked.lead, JSON.stringify(checked));
+  assert.equal(checked.lead.contractEnd, "2027-03-15");
+  assert.equal(checked.lead.preferredContact, "whatsapp");
+  const body = sheetBodyForReminder(checked.lead, { id: "r1", receivedAt: "2026-11-27T15:00:00Z", prequalified: false });
+  assert.equal(body.channel, "recordatorio");
+  assert.equal(body.leadSource, "Recordatorio de vencimiento");
+  assert.equal(body.contractExpiration, "2027-03-15");
+  assert.equal(body.consentVersion, REMINDER_CONSENT_VERSION);
+});
+
+test("recordatorio: el servidor exige fecha y su propio consentimiento; el chat sigue igual", () => {
+  const { values } = validateReminder(GOOD_REMINDER, TODAY_R);
+  const payload = buildReminderPayload({ bill: "180", kwh: "1100", zipCode: "77036" }, values, {}, TODAY_R);
+  assert.equal(validateForReminder({ ...payload, contractEnd: "" }).error, "invalid_contract_end");
+  assert.equal(validateForReminder({ ...payload, consentVersion: CHAT_CONSENT }).error, "consent_version");
+  // Un lead del chat sin respuestas sigue siendo rechazado (la excepción es solo del recordatorio).
+  assert.match(validateForReminder({ ...payload, entry: "chat", consentVersion: CHAT_CONSENT }).error, /^invalid_answer_/);
+  assert.equal(channelFor("chat"), "chatbot");
+  assert.equal(channelFor("otro"), "chatbot");
+});
+
+test("compartir: enlace con atribución propia, ES y EN", () => {
+  assert.equal(shareUrl("es"), "https://www.vinculos360.com/?utm_source=compartir&utm_medium=analizador&utm_campaign=analizador-compartir#analizador");
+  assert.match(shareUrl("en"), /vinculos360\.com\/en\/\?utm_source=compartir/);
+});

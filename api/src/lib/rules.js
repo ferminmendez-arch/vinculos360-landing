@@ -132,11 +132,26 @@ export const EVENT_NAMES = [
   "analyzer_view",
   "analyzer_calc",
   "analyzer_cta",
+  // Recordatorio de vencimiento y "compartir" del analizador (nov. 2026).
+  "analyzer_share",
+  "reminder_signup",
 ];
 
 /* Punto de entrada del lead. "analizador" = llegó desde el Analizador de factura. */
-export const ENTRY_POINTS = ["chat", "analizador"];
-export const ENTRY_LABELS = { chat: "Chatbot", analizador: "Energy Bill Analyzer" };
+export const ENTRY_POINTS = ["chat", "analizador", "recordatorio"];
+export const ENTRY_LABELS = { chat: "Chatbot", analizador: "Energy Bill Analyzer", recordatorio: "Recordatorio de vencimiento" };
+
+/* Canal que se guarda en la hoja según el punto de entrada. */
+export function channelFor(entry) {
+  return entry === "analizador" || entry === "recordatorio" ? entry : "chatbot";
+}
+
+/* Consentimiento propio del recordatorio de vencimiento (texto en src/lib/analyzerStrings.js).
+   Si cambias ese texto, sube esta versión. */
+export const REMINDER_CONSENT_VERSION = "2026-11-r1";
+/* Días antes del vencimiento en que se avisa al dueño para que escriba al cliente. */
+export const REMINDER_DAYS_BEFORE = 30;
+export const SITE_URL_FOR_SHARE = "https://www.vinculos360.com";
 
 /* ---------- Analizador de factura ---------- */
 
@@ -316,10 +331,13 @@ export function validateChatLead(data) {
   if (!SERVICE_KEYS.includes(serviceKey)) return { error: "invalid_service" };
 
   const raw = data.answers && typeof data.answers === "object" && !Array.isArray(data.answers) ? data.answers : {};
+  // El recordatorio de vencimiento solo trae factura, kWh y fecha: las demás preguntas son opcionales.
+  const isReminder = data.entry === "recordatorio" && serviceKey === "electricidad";
   const answers = {};
   for (const q of QUESTIONS[serviceKey]) {
     if (q.askIf && !q.askIf(answers)) continue; // pregunta que no aplica: se ignora lo que venga
     const value = String(raw[q.id] ?? "");
+    if (isReminder && value === "") continue;
     if (q.kind === "number") {
       const n = value === SKIP ? SKIP : parseAmount(value);
       if (n === null || (n !== SKIP && (Number(n) < q.min || Number(n) > q.max))) return { error: `invalid_answer_${q.id}` };
@@ -343,13 +361,15 @@ export function validateChatLead(data) {
   if (emailError) return { error: emailError };
 
   if (data.consent !== true) return { error: "consent_required" };
-  if (String(data.consentVersion || "") !== CONSENT_VERSION) return { error: "consent_version" };
+  const expectedConsent = isReminder ? REMINDER_CONSENT_VERSION : CONSENT_VERSION;
+  if (String(data.consentVersion || "") !== expectedConsent) return { error: "consent_version" };
 
   const language = LANGS.includes(data.language) ? data.language : "es";
   const device = DEVICES.includes(data.device) ? data.device : "";
   const entry = ENTRY_POINTS.includes(data.entry) ? data.entry : "chat";
   // Fecha opcional del analizador: si viene mal escrita se ignora (no bloquea el lead).
   const contractEnd = serviceKey === "electricidad" ? parseContractEnd(data.contractEnd) || "" : "";
+  if (isReminder && !contractEnd) return { error: "invalid_contract_end" };
 
   const lead = {
     serviceKey,
@@ -361,7 +381,7 @@ export function validateChatLead(data) {
     email: cleanEmail(data.email),
     preferredContact,
     consent: true,
-    consentVersion: CONSENT_VERSION,
+    consentVersion: expectedConsent,
     language,
     source: shortText(data.source) || "Direct",
     medium: shortText(data.medium),

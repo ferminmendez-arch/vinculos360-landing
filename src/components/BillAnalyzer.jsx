@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowRight, CalendarClock, Calculator, Info, MapPin, RotateCcw, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarClock, Calculator, Info, MapPin, RotateCcw, Share2, ShieldCheck } from "lucide-react";
 import { useLang } from "../i18n.js";
 import { ANALYZER_STRINGS, SOURCE_URLS, fmtCents } from "../lib/analyzerStrings.js";
-import { TX_RESIDENTIAL_AVG, analyzeBill, validateAnalyzerInput } from "../lib/billAnalyzer.js";
+import { TX_RESIDENTIAL_AVG, analyzeBill, shareUrl, validateAnalyzerInput } from "../lib/billAnalyzer.js";
 import { trackChatEvent } from "../lib/chatbot/api.js";
+import ReminderSignup from "./ReminderSignup.jsx";
 import { SectionHeading } from "./ui.jsx";
 
 const LEVEL_TONES = {
@@ -100,6 +101,24 @@ export default function BillAnalyzer() {
     trackChatEvent("analyzer_cta", { language: lang, serviceKey: "electricidad" });
     openComparisonChat(values);
   };
+
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    trackChatEvent("analyzer_share", { language: lang, serviceKey: "electricidad" });
+    const url = shareUrl(lang);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: s.share.title, text: s.share.text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(`${s.share.text} ${url}`);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 3000);
+    } catch {
+      /* el visitante canceló o el navegador no lo permite: no pasa nada */
+    }
+  };
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`${s.share.text} ${shareUrl(lang)}`)}`;
 
   const reset = () => {
     setResult(null);
@@ -294,6 +313,31 @@ export default function BillAnalyzer() {
                     </p>
                   </div>
                 )}
+
+                {canCompare && <ReminderSignup key={values?.contractEnd || "sin-fecha"} analyzer={values} lang={lang} s={s} />}
+
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200 pt-4">
+                  <button
+                    type="button"
+                    onClick={share}
+                    className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden="true" />
+                    {s.share.button}
+                  </button>
+                  <a
+                    href={whatsappShare}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackChatEvent("analyzer_share", { language: lang, serviceKey: "electricidad" })}
+                    className="inline-flex min-h-11 items-center text-sm font-semibold text-wa-700 underline-offset-4 hover:underline"
+                  >
+                    {s.share.whatsapp}
+                  </a>
+                  <span role="status" className="text-sm text-slate-600">
+                    {copied ? s.share.copied : ""}
+                  </span>
+                </div>
 
                 <button
                   type="button"

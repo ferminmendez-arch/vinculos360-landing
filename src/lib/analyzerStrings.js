@@ -93,6 +93,43 @@ const es = {
   sources: "Fuentes",
   sourceEia: "Promedio: U.S. Energy Information Administration (EIA-861M)",
   sourcePuct: "Vencimiento de contratos: Comisión de Servicios Públicos de Texas (PUCT)",
+  share: {
+    button: "Compartir la calculadora",
+    whatsapp: "Enviar por WhatsApp",
+    copied: "¡Enlace copiado!",
+    title: "Calculadora de energía eléctrica",
+    text: "¿Sabes cuánto pagas realmente por cada kWh de energía eléctrica? Calcúlalo en un minuto, sin dar tu nombre ni teléfono:",
+  },
+  reminder: {
+    title: "¿Te avisamos antes de que venza tu contrato?",
+    text: "Te escribimos por WhatsApp unas semanas antes del vencimiento, justo cuando puedes comparar y cambiar sin cargo por cancelación. Un solo aviso, sin compromiso.",
+    open: "Sí, avísame",
+    date: "Fecha de vencimiento de tu contrato",
+    name: "Tu nombre",
+    phone: "Tu WhatsApp",
+    email: "Correo electrónico",
+    optional: "opcional",
+    consent:
+      "Acepto que Vínculos 360 me envíe por WhatsApp (y por correo, si lo escribí) un recordatorio antes de que venza mi contrato de energía eléctrica y me contacte sobre ese recordatorio al número que proporcioné. Pueden aplicar tarifas de mensajes y datos. Aceptar no es condición para contratar ningún servicio y puedo pedir que no me contacten en cualquier momento.",
+    submit: "Guardar mi recordatorio",
+    sending: "Guardando…",
+    success: (name, date) => `¡Listo, ${name}! Te avisaremos antes del ${date}.`,
+    successNote: "Si quieres revisar tus opciones antes, escríbenos por WhatsApp cuando gustes.",
+    rejected: "No pudimos guardar tu recordatorio. Inténtalo de nuevo en un momento.",
+    offline: "Parece que no tienes conexión. Inténtalo de nuevo cuando vuelvas a estar en línea.",
+    unverified: "No pudimos confirmar que se guardó. Para estar seguros, escríbenos por WhatsApp.",
+    errors: {
+      date_required: "Escribe la fecha de vencimiento.",
+      date_invalid: "Revisa la fecha de vencimiento.",
+      date_past: "Esa fecha ya pasó. Si tu contrato ya venció, mejor solicita la comparación personalizada.",
+      name_required: "Escribe tu nombre.",
+      name_invalid: "Escribe tu nombre (solo letras).",
+      phone_required: "Escribe tu número de WhatsApp.",
+      phone_invalid: "Escribe un número de 10 dígitos de EE. UU.",
+      email_invalid: "Revisa el correo electrónico.",
+      consent_required: "Marca la casilla para guardar tu recordatorio.",
+    },
+  },
   tipsTitle: "¿Dónde encuentro estos datos?",
   tips: [
     "El total del servicio eléctrico está en el resumen de cargos del periodo.",
@@ -178,6 +215,43 @@ const en = {
   sources: "Sources",
   sourceEia: "Average: U.S. Energy Information Administration (EIA-861M)",
   sourcePuct: "Contract expiration: Public Utility Commission of Texas (PUCT)",
+  share: {
+    button: "Share the calculator",
+    whatsapp: "Send on WhatsApp",
+    copied: "Link copied!",
+    title: "Electricity cost calculator",
+    text: "Do you know how much you really pay per kWh of electricity? Find out in a minute, without giving your name or phone number:",
+  },
+  reminder: {
+    title: "Want a reminder before your contract ends?",
+    text: "We'll message you on WhatsApp a few weeks before it ends, right when you can compare and switch without an early termination fee. One reminder, no commitment.",
+    open: "Yes, remind me",
+    date: "Contract expiration date",
+    name: "Your name",
+    phone: "Your WhatsApp number",
+    email: "Email",
+    optional: "optional",
+    consent:
+      "I agree that Vínculos 360 may send me a reminder on WhatsApp (and by email, if I entered one) before my electricity contract ends, and contact me about that reminder at the number I provided. Message and data rates may apply. Agreeing is not a condition of purchasing any service, and I can ask not to be contacted at any time.",
+    submit: "Save my reminder",
+    sending: "Saving…",
+    success: (name, date) => `All set, ${name}! We'll remind you before ${date}.`,
+    successNote: "If you'd like to review your options sooner, message us on WhatsApp anytime.",
+    rejected: "We couldn't save your reminder. Please try again in a moment.",
+    offline: "You seem to be offline. Please try again when you're back online.",
+    unverified: "We couldn't confirm it was saved. To be sure, message us on WhatsApp.",
+    errors: {
+      date_required: "Enter the expiration date.",
+      date_invalid: "Please check the expiration date.",
+      date_past: "That date has passed. If your contract already ended, request the personalized comparison instead.",
+      name_required: "Enter your name.",
+      name_invalid: "Enter your name (letters only).",
+      phone_required: "Enter your WhatsApp number.",
+      phone_invalid: "Enter a 10-digit U.S. number.",
+      email_invalid: "Please check the email.",
+      consent_required: "Check the box to save your reminder.",
+    },
+  },
   tipsTitle: "Where do I find these numbers?",
   tips: [
     "The electric service total is in the summary of charges for the period.",
@@ -187,7 +261,7 @@ const en = {
 };
 
 export const ANALYZER_STRINGS = { es, en };
-export { fmtCents };
+export { fmtCents, fmtDate };
 
 export const SOURCE_URLS = {
   eia: "https://www.eia.gov/electricity/data/eia861m/",

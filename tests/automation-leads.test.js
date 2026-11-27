@@ -373,3 +373,35 @@ test("Panel: muestra leads por canal y el embudo del analizador", () => {
   assert.match(text, /Visitas al analizador de factura = 12/);
   assert.match(text, /Solicitudes de comparación = 2/);
 });
+
+/* ---------- Recordatorios de vencimiento (nov. 2026) ---------- */
+test("recordatorios: avisa al dueño 30 días antes, una sola vez, y respeta 'No contactar'", () => {
+  const head = ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Source", "Medium", "Campaign", "Ad", "Fbclid", "Device", "LeadId", "Channel", "ContractExpiration"];
+  const soon = new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10);
+  const later = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+  const rows = [head,
+    ["2026-11-20T15:00:00Z", "Rosa Sintética", "(713) 000-3333", "77036", "Electricidad", "facebook", "", "", "", "", "Mobile", "L1", "recordatorio", soon],
+    ["2026-11-20T16:00:00Z", "Luis Sintético", "(713) 000-4444", "77084", "Electricidad", "facebook", "", "", "", "", "Mobile", "L2", "recordatorio", later],
+    ["2026-11-20T17:00:00Z", "Prueba QA", "(281) 555-0101", "77084", "Electricidad", "", "", "", "", "", "Mobile", "L3", "recordatorio", soon]];
+  const e = createAppsScriptEnv({ sheets: { Leads: toSheetValues(rows) }, props: PROPS });
+  e.gas.processNewLeads();
+  const rem = e.sheet("Recordatorios").values;
+  assert.equal(rem.length, 2, "solo Rosa: Luis vence en 90 días y la fila de prueba no cuenta");
+  assert.equal(rem[1][1], "Rosa Sintética");
+  assert.match(rem[1][8], /^https:\/\/wa\.me\/17130003333\?text=/);
+  assert.match(decodeURIComponent(rem[1][8]), /vence el .*respóndeme "NO"/);
+  const alerts = e.emails.filter((m) => /por vencer/.test(m.subject));
+  assert.equal(alerts.length, 1);
+  assert.doesNotMatch(alerts[0].htmlBody, /713|000-3333/, "sin teléfonos en el correo");
+  e.gas.processNewLeads();
+  assert.equal(e.sheet("Recordatorios").values.length, 2, "no se repite");
+  assert.equal(e.emails.filter((m) => /por vencer/.test(m.subject)).length, 1);
+});
+
+test("recordatorios: no avisa si el lead pidió 'No contactar' o ya es cliente", () => {
+  const e = createAppsScriptEnv({ sheets: { Leads: [[]] }, props: PROPS });
+  const now = new Date("2026-12-01T12:00:00Z");
+  const lead = (key, extra = {}) => ({ key, phone: "7130005555", status: "Nuevo", contractEnd: "2026-12-20", name: "Ana", zip: "77036", ...extra });
+  const due = e.gas.v360DueReminders([lead("a"), lead("b"), lead("c"), lead("d", { contractEnd: "" })], now, {}, { b: "No contactar", c: "Inscrito" }, 30);
+  assert.deepEqual(due.map((l) => l.key), ["a"]);
+});
