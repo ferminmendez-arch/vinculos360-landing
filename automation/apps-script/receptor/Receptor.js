@@ -14,7 +14,8 @@
 
    v4 (analizador de factura, compatible con v1–v3): columnas BillAmount,
    MonthlyKwh, EffectiveCentsKwh, ContractExpiration y LeadSource al final,
-   y contadores analyzer_view / analyzer_calc / analyzer_cta en "Chatbot".
+   y contadores analyzer_view / analyzer_calc / analyzer_cta / analyzer_share /
+   reminder_signup en "Chatbot". Canal "recordatorio" = recordatorio de vencimiento.
 
    v2 (chatbot, compatible con v1): si el cuerpo trae claves extra del
    chatbot (channel, language, email, preferredContact, consent,
@@ -41,7 +42,7 @@ var RECEPTOR = {
   EXTRA_KEYS: ["channel", "language", "email", "preferredContact", "consent", "consentVersion", "consentAt", "qualification", "answers", "chatLeadId",
     "billAmount", "monthlyKwh", "effectiveCentsKwh", "contractExpiration", "leadSource"],
   METRICS_SHEET: "Chatbot",
-  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
+  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta", "analyzer_share", "reminder_signup"],
   SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos", "Otros servicios"],
   MAX_BODY: 5000,
   MAX_FIELD: 300,

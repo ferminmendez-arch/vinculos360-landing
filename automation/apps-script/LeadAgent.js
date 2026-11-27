@@ -78,7 +78,13 @@ var V360 = {
     channel: ["channel", "canal"],
     leadSource: ["leadsource", "lead source", "origen del lead"],
     leadId: ["leadid", "lead id", "chatleadid"],
+    contractEnd: ["contractexpiration", "contract expiration", "vencimiento del contrato"],
   },
+  /* Recordatorio de vencimiento: el visitante lo pidió con consentimiento en el analizador.
+     El agente avisa al dueño N días antes; el dueño envía el WhatsApp. */
+  REMINDER_SHEET: "Recordatorios",
+  REMINDER_HEADERS: ["Clave", "Nombre", "Teléfono", "ZIP", "Vence", "Avisar desde", "Avisado al dueño", "Mensaje", "Abrir WhatsApp"],
+  REMINDER_DAYS_BEFORE: 30,
   /* Pestaña "Chatbot" que llena el receptor: contadores anónimos por día. */
   FUNNEL_EVENTS: ["chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
 };
@@ -164,6 +170,7 @@ function v360ReadLeads(values) {
       answers: v360ParseAnswers(get(row, "answers")),
       channel: v360Channel(get(row, "leadSource"), get(row, "channel")),
       leadId: String(get(row, "leadId") || "").trim(),
+      contractEnd: v360IsoDate(get(row, "contractEnd")),
     });
   }
   return leads;
@@ -386,6 +393,56 @@ function v360WhatsAppDraft(lead) {
 
 function v360WhatsAppLink(phone, text) {
   return "https://wa.me/1" + phone + "?text=" + encodeURIComponent(text);
+}
+
+/* "2027-01-15" desde una fecha de la hoja (Date o texto). "" si no es válida. */
+function v360IsoDate(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.getFullYear() + "-" + ("0" + (value.getMonth() + 1)).slice(-2) + "-" + ("0" + value.getDate()).slice(-2);
+  }
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value == null ? "" : value).replace(/^'/, "").trim());
+  return m ? m[0] : "";
+}
+
+function v360DateFromIso(iso) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)) : null;
+}
+
+/* Recordatorios que ya toca avisar: leads válidos con fecha de vencimiento, dentro de la
+   ventana (desde N días antes hasta el vencimiento), sin aviso previo y que no pidieron
+   "No contactar". Funciona igual para leads del recordatorio y del chat. */
+function v360DueReminders(leads, now, sentKeys, statusByKey, daysBefore) {
+  var days = daysBefore || V360.REMINDER_DAYS_BEFORE;
+  return leads.filter(function (l) {
+    if (!l.contractEnd || l.status === "Prueba" || l.status === "Duplicado" || l.phone.length !== 10) return false;
+    if (sentKeys[l.key]) return false;
+    var st = (statusByKey && statusByKey[l.key]) || "";
+    if (st === "No contactar" || V360.ENROLLED_STATUSES.indexOf(st) !== -1) return false;
+    var end = v360DateFromIso(l.contractEnd);
+    var from = new Date(end.getTime() - days * 86400000);
+    return now.getTime() >= from.getTime() && now.getTime() <= end.getTime() + 86400000;
+  });
+}
+
+/* Mensaje del recordatorio. Lo envía una persona; incluye la opción de no recibir más avisos. */
+function v360ReminderDraft(lead) {
+  var hi = v360FirstName(lead.name) ? "Hola " + v360FirstName(lead.name) : "Hola";
+  var end = v360DateFromIso(lead.contractEnd);
+  var months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  var when = end ? end.getUTCDate() + " de " + months[end.getUTCMonth()] : "pronto";
+  return (
+    hi + ", soy Fermín, de Vínculos 360. Te escribo porque me pediste que te avisara: tu contrato de energía eléctrica vence el " + when + ". " +
+    "Es el mejor momento para comparar antes de que se renueve solo. ¿Te ayudo a revisar tus opciones? " +
+    "Si ya no quieres estos avisos, respóndeme \"NO\"."
+  );
+}
+
+function v360ReminderRow(lead, now, days) {
+  var end = v360DateFromIso(lead.contractEnd);
+  var from = new Date(end.getTime() - (days || V360.REMINDER_DAYS_BEFORE) * 86400000);
+  var text = v360ReminderDraft(lead);
+  return [lead.key, lead.name, lead.phone, lead.zip, lead.contractEnd, v360IsoDate(new Date(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())), now, text, v360WhatsAppLink(lead.phone, text)].map(v360Safe);
 }
 
 /* Evita que un nombre como "=IMPORTXML(...)" se ejecute como fórmula. */
@@ -787,6 +844,8 @@ function processNewLeads() {
       if (actionable.length) v360NotifyNewLeads(settings, ss, actionable, ctx);
     }
 
+    v360ProcessReminders(settings, ss, data, now);
+
     // Se aplica en cada revisión para que todas las filas tengan la lista de estados vigente.
     v360ApplyStatusValidation(data.tracking.sheet);
     var metrics = v360ComputeMetrics(data.leads, v360ReadTracking(ss).statusByKey, v360ReadSpend(ss), v360WithFunnel(ss, settings), now);
@@ -800,6 +859,35 @@ function processNewLeads() {
     throw error;
   } finally {
     lock.releaseLock();
+  }
+}
+
+/* Avisa al dueño (correo + pestaña Recordatorios) cuando un contrato está por vencer. Idempotente. */
+function v360ProcessReminders(settings, ss, data, now) {
+  try {
+    var sheet = v360EnsureSheet(ss, V360.REMINDER_SHEET, V360.REMINDER_HEADERS);
+    var values = sheet.getDataRange().getValues();
+    var sent = {};
+    for (var i = 1; i < values.length; i++) if (values[i][0]) sent[String(values[i][0])] = true;
+    var days = Number(v360Props().get("REMINDER_DAYS_BEFORE", V360.REMINDER_DAYS_BEFORE)) || V360.REMINDER_DAYS_BEFORE;
+    var due = v360DueReminders(data.leads, now, sent, data.tracking.statusByKey, days);
+    if (!due.length) return 0;
+    var rows = due.map(function (l) { return v360ReminderRow(l, now, days); });
+    v360Retry(function () { sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, V360.REMINDER_HEADERS.length).setValues(rows); });
+    MailApp.sendEmail({
+      to: settings.ownerEmail,
+      subject: "Vínculos 360: " + due.length + " contrato(s) por vencer — escribe hoy",
+      htmlBody: "<p>Estas personas pidieron que les avisaras antes de que venza su contrato de energía eléctrica. " +
+        "El mensaje de WhatsApp está listo en la pestaña <b>Recordatorios</b>: ábrelo, revísalo y envíalo tú.</p><ul>" +
+        due.map(function (l) {
+          return "<li>" + v360Esc(settings.alertDetails ? v360FirstName(l.name) + " — " : "") + "vence el " + v360Esc(l.contractEnd) + " · ZIP " + v360Esc(l.zip) + "</li>";
+        }).join("") + "</ul><p><a href='" + ss.getUrl() + "'>Abrir la hoja</a></p>",
+    });
+    v360Log(ss, "info", "Recordatorios de vencimiento: " + due.length + " aviso(s) al dueño.");
+    return due.length;
+  } catch (e) {
+    v360Log(ss, "error", "Recordatorios: " + e);
+    return 0;
   }
 }
 

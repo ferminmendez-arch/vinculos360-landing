@@ -182,7 +182,7 @@ const CHAT_BODY = {
 const V3_EXTRA = ["Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId"];
 const V4_EXTRA = ["BillAmount", "MonthlyKwh", "EffectiveCentsKwh", "ContractExpiration", "LeadSource"];
 const V2_METRICS = ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified"];
-const V4_METRICS = ["analyzer_view", "analyzer_calc", "analyzer_cta"];
+const V4_METRICS = ["analyzer_view", "analyzer_calc", "analyzer_cta", "analyzer_share", "reminder_signup"];
 
 test("v2: agrega las columnas del chatbot a una hoja v1 existente sin mover las originales", () => {
   const env = createEnv({ existing: [V1_HEADERS, [new Date(), "Ana", "(281) 555-0101"]] });
@@ -215,7 +215,7 @@ test("v2: métricas del chatbot por día, sin datos personales", () => {
   assert.equal(env.post({ type: "chat_event", event: "borrar_todo" }).ok, false);
   assert.deepEqual([...env.metricRows[0]], [...V2_METRICS, ...V4_METRICS]);
   assert.equal(env.metricRows.length, 2);
-  assert.deepEqual([...env.metricRows[1]], ["'2026-11-23", 2, 0, 1, 0, 0, 0, 0]);
+  assert.deepEqual([...env.metricRows[1]], ["'2026-11-23", 2, 0, 1, 0, 0, 0, 0, 0, 0]);
   assert.equal(env.rows.length, 0, "un evento nunca escribe en Leads");
 });
 
@@ -260,5 +260,5 @@ test("v4: la pestaña Chatbot v2 gana los contadores del analizador sin perder l
   assert.equal(env.post({ type: "chat_event", event: "analyzer_cta" }).ok, true);
   assert.deepEqual([...env.metricRows[0]], [...V2_METRICS, ...V4_METRICS]);
   assert.deepEqual([...env.metricRows[1]], ["'2026-11-22", 5, 3, 1, 1]);
-  assert.deepEqual([...env.metricRows[2]], ["'2026-11-23", 0, 0, 0, 0, 0, 1, 1]);
+  assert.deepEqual([...env.metricRows[2]], ["'2026-11-23", 0, 0, 0, 0, 0, 1, 1, 0, 0]);
 });
