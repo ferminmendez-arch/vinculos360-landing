@@ -17,6 +17,13 @@
    y contadores analyzer_view / analyzer_calc / analyzer_cta / analyzer_share /
    reminder_signup en "Chatbot". Canal "recordatorio" = recordatorio de vencimiento.
 
+   v5 (correo de confirmación, aprobado por el dueño el 27 nov 2026): si el
+   lead trae un correo válido y consentimiento, después de guardar la fila
+   se envía un correo de confirmación desde la cuenta del dueño. Nunca
+   bloquea ni cambia la respuesta del lead si el correo falla. Máximo uno
+   por dirección cada 6 h. Se apaga con la propiedad
+   CONFIRMATION_EMAIL_ENABLED = false.
+
    v2 (chatbot, compatible con v1): si el cuerpo trae claves extra del
    chatbot (channel, language, email, preferredContact, consent,
    consentVersion, consentAt, qualification, answers, chatLeadId), se
@@ -46,6 +53,9 @@ var RECEPTOR = {
   SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos", "Otros servicios"],
   MAX_BODY: 5000,
   MAX_FIELD: 300,
+  WHATSAPP: "12818257327",
+  PHONE_DISPLAY: "(281) 825-7327",
+  SITE: "www.vinculos360.com",
 };
 
 function receptorJson(obj) {
@@ -126,6 +136,89 @@ function receptorSheet() {
   if (!free) return { sheet: sheet, extended: false };
   sheet.getRange(1, RECEPTOR.HEADERS.length + 1, 1, RECEPTOR.EXTRA_HEADERS.length).setValues([RECEPTOR.EXTRA_HEADERS]);
   return { sheet: sheet, extended: true };
+}
+
+/* ---------- Correo de confirmación al cliente (v5) ---------- */
+
+function receptorEsc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/* Arma el correo o devuelve null si no corresponde enviarlo. Función pura (probada). */
+function receptorConfirmationEmail(data, lead) {
+  var email = String((data && data.email) || "").trim().toLowerCase();
+  if (!/^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[a-z]{2,}$/i.test(email) || email.length > 120) return null;
+  var consent = data.consent === true || data.consent === "sí" || data.consent === "si";
+  if (!consent) return null;
+  var en = data.language === "en";
+  var first = String(lead.name || "").split(" ")[0];
+  var methodsEs = { whatsapp: "WhatsApp", llamada: "llamada", texto: "mensaje de texto", correo: "correo" };
+  var methodsEn = { whatsapp: "WhatsApp", llamada: "phone call", texto: "text message", correo: "email" };
+  var servicesEn = { "Electricidad": "electricity", "Internet": "internet", "Seguridad y monitoreo": "security and monitoring", "Televisión": "TV",
+    "Telefonía celular": "cell phone service", "Protección de identidad": "identity protection", "Procesamiento de pagos": "payment processing", "Otros servicios": "other services" };
+  var serviceEs = lead.service === "Electricidad" ? "energía eléctrica" : String(lead.service || "").toLowerCase();
+  var reminder = data.channel === "recordatorio";
+  var date = String(data.contractExpiration || "");
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  var monthsEs = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  var monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var dateText = m ? (en ? monthsEn[+m[2] - 1] + " " + +m[3] + ", " + m[1] : +m[3] + " de " + monthsEs[+m[2] - 1] + " de " + m[1]) : "";
+  var wa = "https://wa.me/" + RECEPTOR.WHATSAPP;
+  var lines;
+  if (en) {
+    lines = [
+      "Hi " + first + ",",
+      reminder && dateText
+        ? "Thanks! Your reminder is set: we'll message you on WhatsApp before your electricity contract ends on " + dateText + ", so you can compare in time."
+        : "Thanks for reaching out. We received your request about " + (servicesEn[lead.service] || "your service") + " (ZIP " + lead.zipCode + "). Fermín will contact you soon by " + (methodsEn[data.preferredContact] || "phone") + ".",
+      reminder ? "" : "To save time, have your latest bill handy (the total and the kWh).",
+      "Important: we will never ask for your Social Security number or ID by email, WhatsApp or chat.",
+      "Want to talk now? Message us on WhatsApp: " + wa + " or call " + RECEPTOR.PHONE_DISPLAY + ".",
+      "If you didn't make this request or don't want more messages, reply to this email with \"NO\".",
+    ];
+  } else {
+    lines = [
+      "Hola " + first + ",",
+      reminder && dateText
+        ? "¡Gracias! Tu recordatorio quedó listo: te escribiremos por WhatsApp antes de que venza tu contrato de energía eléctrica, el " + dateText + ", para que compares a tiempo."
+        : "Gracias por escribirnos. Recibimos tu solicitud sobre " + serviceEs + " (ZIP " + lead.zipCode + "). Fermín te contactará pronto por " + (methodsEs[data.preferredContact] || "teléfono") + ".",
+      reminder ? "" : "Para ganar tiempo, ten a mano tu última factura (el total y los kWh).",
+      "Importante: nunca te pediremos tu número de Seguro Social ni tu identificación por correo, WhatsApp o chat.",
+      "¿Prefieres hablar ya? Escríbenos por WhatsApp: " + wa + " o llama al " + RECEPTOR.PHONE_DISPLAY + ".",
+      "Si no hiciste esta solicitud o no quieres más mensajes, responde a este correo con \"NO\".",
+    ];
+  }
+  lines = lines.filter(Boolean);
+  var signature = en
+    ? ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.SITE, "We are independent representatives."]
+    : ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.SITE, "Somos representantes independientes."];
+  var subject = en
+    ? (reminder ? "Your contract reminder is set — Vínculos 360" : "We received your request — Vínculos 360")
+    : (reminder ? "Tu recordatorio quedó listo — Vínculos 360" : "Recibimos tu solicitud — Vínculos 360");
+  var html = "<div style=\"font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#0f172a;max-width:560px\">" +
+    lines.map(function (l) { return "<p>" + receptorEsc(l).replace(receptorEsc(wa), "<a href=\"" + wa + "\">" + receptorEsc(wa) + "</a>") + "</p>"; }).join("") +
+    "<p style=\"color:#475569;font-size:13px;margin-top:24px\">" + signature.map(receptorEsc).join("<br>") + "</p></div>";
+  return { to: email, subject: subject, body: lines.concat(["", ""], signature).join("\n\n"), htmlBody: html, name: "Vínculos 360" };
+}
+
+/* Envía la confirmación sin afectar nunca el resultado del lead. */
+function receptorSendConfirmation(data, lead) {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    if (String(props.getProperty("CONFIRMATION_EMAIL_ENABLED") || "true") === "false") return "off";
+    var msg = receptorConfirmationEmail(data, lead);
+    if (!msg) return "skip";
+    var cache = CacheService.getScriptCache();
+    var key = "conf:" + msg.to;
+    if (cache.get(key)) return "recent";
+    if (MailApp.getRemainingDailyQuota() < 5) return "quota";
+    MailApp.sendEmail(msg);
+    cache.put(key, "1", 21600); // 6 h (máximo de CacheService)
+    return "sent";
+  } catch (e) {
+    console.error("confirmación: " + (e && e.message ? e.message : e));
+    return "error";
+  }
 }
 
 /* ---------- Métricas del chatbot (anónimas) ---------- */
@@ -210,6 +303,12 @@ function doPost(e) {
     var row = [new Date()].concat(values.map(receptorSafe));
     target.sheet.appendRow(row);
     SpreadsheetApp.flush(); // la fila queda escrita antes de confirmar
+    try {
+      lock.releaseLock();
+    } catch (releaseError) {
+      /* ya liberado */
+    }
+    receptorSendConfirmation(data, l); // después de guardar; nunca cambia la respuesta
     return receptorJson({ ok: true, result: "success", id: leadId });
   } catch (error) {
     console.error("doPost: " + (error && error.message ? error.message : error));
