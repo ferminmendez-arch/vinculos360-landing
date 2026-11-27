@@ -281,6 +281,9 @@ test("v5: con correo y consentimiento, envía UNA confirmación después de guar
   assert.equal(env.mails.length, 1);
   const m = env.mails[0];
   assert.equal(m.to, "cliente@example.com");
+  assert.equal(m.replyTo, "fermin.mendez@vinculos360.com", "las respuestas llegan al correo del negocio");
+  assert.equal(m.name, "Fermín Mendez · Vínculos 360");
+  assert.match(m.body, /fermin\.mendez@vinculos360\.com/);
   assert.equal(m.subject, "Recibimos tu solicitud — Vínculos 360");
   assert.match(m.body, /Hola Fermin,/);
   assert.match(m.body, /energía eléctrica \(ZIP 77001\)/);
