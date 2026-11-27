@@ -168,7 +168,8 @@ test("TREC: solo agentes activos con licencia nueva, máximo diario y sin duplic
   assert.ok(r.every((x) => x.Mercado === "Trade" && x.Tipo === "Profesional inmobiliario" && x.Interacción === "Manual"));
   assert.ok(r.every((x) => /data\.texas\.gov\/resource\/s7ft-44qi\.json\?license_number=/.test(x.URL)));
   assert.ok(r.every((x) => !/@|\(\d{3}\)/.test(x.Resumen)), "sin correos ni teléfonos");
-  assert.match(e.fetches[0], /upper\(county\)%20in\(/);
+  assert.match(e.fetches[0], /upper%28county%29%20in%28%27HARRIS%27/);
+  assert.doesNotMatch(e.fetches[0], /['()$]/, "sin caracteres que UrlFetchApp rechaza");
   e.gas.discoverOpportunities(NOW);
   r = rows(e);
   assert.equal(r.length, 6, "al día siguiente agrega los que faltan (6 válidos), sin repetir");
