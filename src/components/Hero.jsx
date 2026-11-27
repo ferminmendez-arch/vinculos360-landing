@@ -1,6 +1,7 @@
-import { ArrowRight, CircleCheck, MessageCircle } from "lucide-react";
+import { CircleCheck, MessageCircleMore } from "lucide-react";
 import { useStrings } from "../i18n.js";
 import { WhatsAppLink } from "./ui.jsx";
+import { openChat } from "../lib/chatbot/open.js";
 
 const HERO_SIZES = "(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 100vw";
 
@@ -30,13 +31,16 @@ export default function Hero() {
           <p className="mt-5 max-w-xl text-lg leading-8 text-pretty text-slate-600">{t.hero.text}</p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#servicios"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-700 px-7 py-4 text-base font-semibold text-white shadow-lg shadow-brand-700/25 transition-colors hover:bg-brand-800"
+            <button
+              type="button"
+              onClick={() => openChat()}
+              aria-haspopup="dialog"
+              aria-controls="v360-chat"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-700 px-7 py-4 text-base font-semibold text-white shadow-lg shadow-brand-700/25 transition hover:-translate-y-0.5 hover:bg-brand-800"
             >
+              <MessageCircleMore className="h-5 w-5" aria-hidden="true" />
               {t.hero.primary}
-              <ArrowRight className="h-5 w-5" aria-hidden="true" />
-            </a>
+            </button>
             <WhatsAppLink variant="outline" className="px-7 py-4 text-base">
               {t.hero.whatsapp}
             </WhatsAppLink>
@@ -52,7 +56,7 @@ export default function Hero() {
           </ul>
         </div>
 
-        <div className="relative mx-auto w-full max-w-xl pt-6 pb-16 sm:px-6 sm:pb-10 lg:max-w-none lg:pr-0">
+        <div className="relative mx-auto w-full max-w-xl pt-6 pb-6 sm:px-6 sm:pb-10 lg:max-w-none lg:pr-0">
           {/* Fondo decorativo */}
           <div aria-hidden="true" className="absolute inset-0 -z-10">
             <div className="absolute top-0 right-0 bottom-4 left-10 rounded-[2.5rem] bg-gradient-to-br from-brand-600 to-brand-900 sm:left-16" />
@@ -82,25 +86,6 @@ export default function Hero() {
             />
           </picture>
 
-          {/* Tarjeta "Vínculos 360 · En línea": abre el chat del sitio */}
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("v360:open-chat"))}
-            aria-label={t.hero.chatOpen}
-            className="animate-float-soft absolute bottom-0 left-2 flex max-w-[16.5rem] cursor-pointer items-start gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 text-left shadow-xl shadow-brand-950/15 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white hover:shadow-2xl focus-visible:ring-4 focus-visible:ring-brand-200 focus-visible:outline-none sm:-left-2 sm:bottom-2 sm:max-w-[17rem] sm:p-4"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wa-600 text-white">
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                Vínculos 360
-                <span className="h-1.5 w-1.5 rounded-full bg-wa-500" />
-                <span className="font-medium text-slate-500">{t.hero.chatStatus}</span>
-              </span>
-              <span className="mt-1 block text-sm leading-snug text-slate-700">{t.hero.chatMessage}</span>
-            </span>
-          </button>
         </div>
       </div>
     </section>

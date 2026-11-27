@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
-import { Phone } from "lucide-react";
+import { MessageCircleMore, Phone } from "lucide-react";
 import { PHONE_E164 } from "../config.js";
 import { useStrings } from "../i18n.js";
+import { chatRequestedInUrl, openChat } from "../lib/chatbot/open.js";
 
-/* Barra fija en móviles. Se oculta mientras el formulario está en pantalla
-   para no tapar el botón de envío. */
+/* Barra fija en móviles: llamar o abrir el chat (el único chat del sitio; en celular no hay botón flotante).
+   Se oculta mientras el formulario está en pantalla para no tapar el botón de envío. */
 export default function MobileCtaBar() {
   const t = useStrings();
   const [hidden, setHidden] = useState(false);
+  const [attention, setAttention] = useState(chatRequestedInUrl);
+
+  // Con ?chat=1 (enlace desde WhatsApp) el botón del chat se resalta unos segundos.
+  useEffect(() => {
+    if (!attention) return undefined;
+    const id = window.setTimeout(() => setAttention(false), 6000);
+    return () => window.clearTimeout(id);
+  }, [attention]);
 
   useEffect(() => {
     const target = document.getElementById("contacto");
@@ -35,13 +44,19 @@ export default function MobileCtaBar() {
           <Phone className="h-5 w-5" aria-hidden="true" />
           {t.mobileBar.call}
         </a>
-        <a
-          href="#contacto"
+        <button
+          type="button"
+          onClick={() => openChat()}
           tabIndex={hidden ? -1 : undefined}
-          className="inline-flex flex-[1.4] items-center justify-center rounded-full bg-brand-700 px-4 py-3 text-base font-semibold text-white"
+          aria-haspopup="dialog"
+          aria-controls="v360-chat"
+          className={`inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand-700 px-4 whitespace-nowrap py-3 text-base font-semibold text-white ${
+            attention ? "animate-attention" : ""
+          }`}
         >
+          <MessageCircleMore className="h-5 w-5" aria-hidden="true" />
           {t.mobileBar.request}
-        </a>
+        </button>
       </div>
     </div>
   );

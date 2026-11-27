@@ -34,21 +34,18 @@ const es = {
     titleStart: "Los servicios esenciales de tu hogar,",
     titleHighlight: "en un solo lugar",
     text: "Somos representantes independientes. Te explicamos de forma clara las opciones de electricidad, internet, seguridad y otros servicios esenciales de los proveedores con los que trabajamos, para que elijas lo que mejor se adapte a tu hogar.",
-    primary: "Ver mis opciones",
+    primary: "Revisar mis opciones",
     whatsapp: "Hablar por WhatsApp",
     imageAlt: "Familia sonriente revisando sus facturas en la cocina de su casa",
-    chatStatus: "En línea",
-    chatMessage: "¡Hola! Te explicamos tus opciones.",
-    chatOpen: "Abrir el chat de Vínculos 360",
   },
   benefits: ["Atención personalizada", "Orientación sin compromiso", "Proceso rápido y sencillo"],
 
   services: {
     eyebrow: "Servicios",
     title: "¿Qué servicio necesitas?",
-    text: "Selecciona el servicio que deseas revisar y te llevamos directo al formulario.",
-    select: "Seleccionar",
-    selected: "Seleccionado — continuar",
+    text: "Elige un servicio y nuestro asistente te hace unas preguntas rápidas para orientarte.",
+    select: "Revisar opciones",
+    selected: "Seleccionado — continuar en el chat",
     items: {
       electricidad: {
         title: "Electricidad",
@@ -164,7 +161,7 @@ const es = {
     rights: "Todos los derechos reservados.",
   },
 
-  mobileBar: { call: "Llamar", request: "Solicitar ayuda" },
+  mobileBar: { call: "Llamar", request: "Revisar opciones" },
 
   whatsapp: {
     default: "Hola, vi Vínculos 360 y quisiera información sobre servicios para mi hogar.",
@@ -208,21 +205,18 @@ const en = {
     titleStart: "Your home's essential services,",
     titleHighlight: "all in one place",
     text: "We are independent representatives. We clearly explain electricity, internet, security and other essential service options from the providers we work with, so you can choose what best fits your home.",
-    primary: "See my options",
+    primary: "Check my options",
     whatsapp: "Chat on WhatsApp",
     imageAlt: "Smiling family reviewing their bills in their kitchen at home",
-    chatStatus: "Online",
-    chatMessage: "Hi! We'll explain your options.",
-    chatOpen: "Open the Vínculos 360 chat",
   },
   benefits: ["Personalized attention", "No-obligation guidance", "Quick and simple process"],
 
   services: {
     eyebrow: "Services",
     title: "What service do you need?",
-    text: "Choose the service you want to review and we'll take you straight to the form.",
-    select: "Select",
-    selected: "Selected — continue",
+    text: "Pick a service and our assistant will ask a few quick questions to guide you.",
+    select: "Check options",
+    selected: "Selected — continue in the chat",
     items: {
       electricidad: {
         title: "Electricity",
@@ -336,7 +330,7 @@ const en = {
     rights: "All rights reserved.",
   },
 
-  mobileBar: { call: "Call", request: "Get help" },
+  mobileBar: { call: "Call", request: "Check options" },
 
   whatsapp: {
     default: "Hi, I saw Vínculos 360 and I'd like information about services for my home.",

@@ -95,9 +95,15 @@ function UserBubble({ children, label }) {
 
 /* ---------- Panel ---------- */
 
-export default function ChatPanel({ open, onClose, lang }) {
+/* Si el chat se abrió desde una tarjeta de servicio, ese servicio ya queda elegido. */
+function withService(state, serviceKey) {
+  return serviceKey && !state.serviceKey ? answer(state, "service", serviceKey) : state;
+}
+
+export default function ChatPanel({ open, onClose, lang, request = { serviceKey: "", n: 0 } }) {
   const s = CHAT_STRINGS[lang] || CHAT_STRINGS.es;
-  const [state, setState] = useState(INITIAL_STATE);
+  const [state, setState] = useState(() => withService(INITIAL_STATE, request.serviceKey));
+  const [appliedRequest, setAppliedRequest] = useState(request.n);
   const [draft, setDraft] = useState("");
   const [inputError, setInputError] = useState("");
   const [consent, setConsent] = useState(false);
@@ -112,6 +118,12 @@ export default function ChatPanel({ open, onClose, lang }) {
   const panelRef = useRef(null);
   const focusRef = useRef(null);
 
+  // Nueva solicitud desde una tarjeta con el chat ya montado: solo aplica si aún no hay servicio elegido.
+  if (request.n !== appliedRequest) {
+    setAppliedRequest(request.n);
+    if (status !== "confirmed" && !state.serviceKey && request.serviceKey) setState(withService(state, request.serviceKey));
+  }
+
   const step = nextStep(state);
   const done = status === "confirmed";
   const locked = status === "submitting" || done;
@@ -119,6 +131,14 @@ export default function ChatPanel({ open, onClose, lang }) {
   useEffect(() => {
     if (!openedAt.current) openedAt.current = performance.now();
   }, []);
+
+  // La conversación empieza cuando hay un servicio elegido (en el chat o desde una tarjeta).
+  useEffect(() => {
+    if (state.serviceKey && !startedRef.current) {
+      startedRef.current = true;
+      trackChatEvent("chat_start", { language: lang, serviceKey: state.serviceKey });
+    }
+  }, [state.serviceKey, lang]);
 
   // Escape cierra el chat.
   useEffect(() => {
@@ -142,10 +162,6 @@ export default function ChatPanel({ open, onClose, lang }) {
 
   const choose = (value) => {
     if (locked || !step) return;
-    if (step.id === "service" && !startedRef.current) {
-      startedRef.current = true;
-      trackChatEvent("chat_start", { language: lang, serviceKey: value });
-    }
     setState((prev) => answer(prev, step.id, value));
     setDraft("");
     setInputError("");
