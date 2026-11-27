@@ -12,6 +12,8 @@ import { fileURLToPath } from "node:url";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE = fs.readFileSync(path.join(DIR, "LeadAgent.js"), "utf8");
+/* Archivos adicionales del mismo proyecto de Apps Script (mismo ámbito global). */
+const EXTRA_FILES = { opportunities: "OpportunityAgent.js" };
 
 class MockRange {
   constructor(sheet, row, col, numRows = 1, numCols = 1) {
@@ -72,7 +74,7 @@ export function toSheetValues(rows) {
   return rows.map((row, i) => (i === 0 ? row : row.map((v, j) => (j === 0 && typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? new Date(v) : v))));
 }
 
-export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = true, openFailures = 0, missingSpreadsheet = false } = {}) {
+export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = true, openFailures = 0, missingSpreadsheet = false, extra = [], fetch = null } = {}) {
   const sheetMap = new Map(Object.entries(sheets).map(([name, values]) => [name, new MockSheet(name, values)]));
   const properties = { ...props };
   const emails = [];
@@ -101,6 +103,8 @@ export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = t
     const chain = {
       timeBased: () => chain,
       everyMinutes: (n) => ((t.everyMinutes = n), chain),
+      everyDays: (n) => ((t.everyDays = n), chain),
+      nearMinute: (n) => ((t.nearMinute = n), chain),
       onWeekDay: (d) => ((t.weekDay = d), chain),
       atHour: (h) => ((t.atHour = h), chain),
       create: () => {
@@ -112,8 +116,18 @@ export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = t
     return chain;
   };
 
+  const fetches = [];
   const sandbox = {
     Date,
+    JSON,
+    UrlFetchApp: {
+      fetch: (url, options) => {
+        fetches.push(url);
+        const res = fetch ? fetch(url, options) : { code: 404, body: "" };
+        if (res instanceof Error) throw res;
+        return { getResponseCode: () => res.code, getContentText: () => res.body };
+      },
+    },
     console: { log: (m) => logs.push(["log", String(m)]), warn: (m) => logs.push(["warn", String(m)]), error: (m) => logs.push(["error", String(m)]) },
     SpreadsheetApp: {
       openById: () => {
@@ -145,6 +159,10 @@ export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = t
   };
   const context = vm.createContext(sandbox);
   vm.runInContext(SOURCE, context, { filename: "LeadAgent.js" });
+  extra.forEach((name) => {
+    const file = EXTRA_FILES[name];
+    vm.runInContext(fs.readFileSync(path.join(DIR, file), "utf8"), context, { filename: file });
+  });
 
   return {
     gas: context,
@@ -155,5 +173,6 @@ export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = t
     sleeps,
     triggers,
     logs,
+    fetches,
   };
 }
