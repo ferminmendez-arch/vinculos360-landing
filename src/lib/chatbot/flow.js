@@ -24,6 +24,8 @@ import {
   digitsOnly,
   formatUsPhone,
   qualify,
+  contractAnswerFromDate,
+  parseContractEnd,
 } from "../../../api/src/lib/rules.js";
 
 export { CONSENT_VERSION, SERVICE_KEYS, QUESTIONS, SKIP };
@@ -37,7 +39,37 @@ export const INITIAL_STATE = Object.freeze({
   phone: "",
   email: "",
   history: Object.freeze([]),
+  entry: "chat",
+  contractEnd: "",
 });
+
+/* Estado inicial cuando el visitante llega desde el Analizador de factura:
+   servicio Electricidad con factura, kWh, ZIP y vencimiento ya contestados,
+   para no volver a preguntarlos. Lo demás (casa/negocio, decisión, nombre,
+   contacto, teléfono y consentimiento) se pregunta igual que siempre. */
+export function prefillFromAnalyzer({ bill, kwh, zipCode, contractEnd } = {}, today = new Date()) {
+  const answers = {};
+  const b = parseAmount(bill);
+  const k = parseAmount(kwh);
+  const billQ = QUESTIONS.electricidad.find((q) => q.id === "bill");
+  const kwhQ = QUESTIONS.electricidad.find((q) => q.id === "kwh");
+  if (b !== null && Number(b) >= billQ.min && Number(b) <= billQ.max) {
+    answers.bill = b;
+    if (k !== null && Number(k) >= kwhQ.min && Number(k) <= kwhQ.max) answers.kwh = k;
+  }
+  const end = parseContractEnd(contractEnd, today) || "";
+  const contract = contractAnswerFromDate(end, today);
+  if (contract) answers.contract = contract;
+  return {
+    ...INITIAL_STATE,
+    serviceKey: "electricidad",
+    answers,
+    zipCode: checkZip(zipCode) ? "" : digitsOnly(zipCode),
+    history: ["service"],
+    entry: "analizador",
+    contractEnd: end,
+  };
+}
 
 /* Pasos en orden. Cada uno: { id, kind: "choice" | "number" | "input" | "consent", options? } */
 export function stepsFor(state) {
@@ -119,7 +151,7 @@ export function answer(state, stepId, value) {
   if (step.kind === "number" && value !== SKIP && parseAmount(value) === null) return state;
 
   const history = [...state.history, stepId];
-  if (stepId === "service") return { ...INITIAL_STATE, serviceKey: value, history };
+  if (stepId === "service") return { ...INITIAL_STATE, serviceKey: value, history, entry: state.entry, contractEnd: "" };
   if (stepId.startsWith("q:")) {
     const answers = { ...state.answers, [stepId.slice(2)]: value };
     // Si una respuesta hace que otra pregunta ya no aplique, se borra esa respuesta.
@@ -137,7 +169,7 @@ export function back(state) {
   if (!state.history.length) return state;
   const last = state.history[state.history.length - 1];
   const history = state.history.slice(0, -1);
-  if (last === "service") return { ...INITIAL_STATE };
+  if (last === "service") return { ...INITIAL_STATE, entry: state.entry };
   if (last.startsWith("q:")) {
     const answers = { ...state.answers };
     delete answers[last.slice(2)];
@@ -161,6 +193,8 @@ export function buildLeadPayload(state, { language, tracking, elapsedMs, consent
     language,
     elapsedMs: Math.round(elapsedMs),
     company: "",
+    entry: state.entry || "chat",
+    contractEnd: state.serviceKey === "electricidad" ? state.contractEnd || "" : "",
     ...tracking,
   };
 }

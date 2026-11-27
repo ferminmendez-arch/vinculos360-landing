@@ -321,3 +321,55 @@ test("el mensaje de inscripción usa la propiedad ENROLL_URL_ELECTRICIDAD y no s
 function e0() {
   return env();
 }
+
+/* ---------- Analizador de factura (nov. 2026): canal y embudo en el Panel ---------- */
+
+test("canal del lead: Energy Bill Analyzer, Chatbot o Formulario", () => {
+  const e = env();
+  const values = [
+    ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Channel", "LeadSource"],
+    ["2026-12-01T10:00:00Z", "Prueba A", "2815550101", "77036", "Electricidad", "analizador", "Energy Bill Analyzer"],
+    ["2026-12-01T11:00:00Z", "Prueba B", "2815550102", "77036", "Electricidad", "chatbot", ""],
+    ["2026-12-01T12:00:00Z", "Prueba C", "2815550103", "77036", "Internet", "formulario", ""],
+  ];
+  const leads = e.gas.v360ReadLeads(toSheetValues(values));
+  assert.deepEqual([...leads.map((l) => l.channel)], ["Energy Bill Analyzer", "Chatbot", "Formulario"]);
+});
+
+test("embudo: suma los contadores de la pestaña Chatbot dentro del periodo de la meta", () => {
+  const e = env();
+  const values = [
+    ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
+    ["'2026-11-29", 9, 9, 9, 9, 9, 9, 9],
+    ["'2026-11-30", 4, 3, 2, 1, 10, 6, 2],
+    ["'2026-12-01", 1, 1, 0, 0, 5, 2, 1],
+  ];
+  const f = e.gas.v360ReadFunnel(values, new Date("2026-11-30T00:00:00"), new Date("2026-12-30T00:00:00"));
+  assert.equal(f.analyzer_view, 15);
+  assert.equal(f.analyzer_calc, 8);
+  assert.equal(f.analyzer_cta, 3);
+  assert.equal(f.chat_complete, 2);
+  // Una pestaña v2 (sin columnas del analizador) da ceros, no error.
+  const old = e.gas.v360ReadFunnel([values[0].slice(0, 5), ["'2026-12-01", 1, 1, 1, 0]], null, null);
+  assert.equal(old.analyzer_view, 0);
+  assert.equal(old.chat_open, 1);
+});
+
+test("Panel: muestra leads por canal y el embudo del analizador", () => {
+  const e = env();
+  const leads = e.gas.v360ClassifyLeads(
+    e.gas.v360ReadLeads(
+      toSheetValues([
+        ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Channel", "LeadSource"],
+        // Datos sintéticos que no parecen prueba (si no, el agente los excluye del conteo).
+        ["2026-12-01T10:00:00Z", "Lucía Ficticia", "7130009999", "77036", "Electricidad", "analizador", "Energy Bill Analyzer"],
+      ])
+    )
+  );
+  const funnel = { chat_open: 3, chat_start: 2, chat_complete: 1, chat_qualified: 1, analyzer_view: 12, analyzer_calc: 5, analyzer_cta: 2 };
+  const m = e.gas.v360ComputeMetrics(leads, {}, [], { goalStart: null, goalDays: 30, goalQualified: 10, budgetCap: 50, funnel }, new Date("2026-12-02T12:00:00Z"));
+  const text = e.gas.v360PanelRows(m).map((r) => r.join(" = ")).join("\n");
+  assert.match(text, /Energy Bill Analyzer = 1 \(0\)/);
+  assert.match(text, /Visitas al analizador de factura = 12/);
+  assert.match(text, /Solicitudes de comparación = 2/);
+});

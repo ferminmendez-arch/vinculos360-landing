@@ -179,15 +179,20 @@ const CHAT_BODY = {
   chatLeadId: "chat-1",
 };
 
+const V3_EXTRA = ["Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId"];
+const V4_EXTRA = ["BillAmount", "MonthlyKwh", "EffectiveCentsKwh", "ContractExpiration", "LeadSource"];
+const V2_METRICS = ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified"];
+const V4_METRICS = ["analyzer_view", "analyzer_calc", "analyzer_cta"];
+
 test("v2: agrega las columnas del chatbot a una hoja v1 existente sin mover las originales", () => {
   const env = createEnv({ existing: [V1_HEADERS, [new Date(), "Ana", "(281) 555-0101"]] });
   const res = env.post(CHAT_BODY);
   assert.equal(res.ok, true);
   assert.deepEqual([...env.rows[0].slice(0, 12)], V1_HEADERS);
-  assert.deepEqual([...env.rows[0].slice(12)], ["Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId"]);
+  assert.deepEqual([...env.rows[0].slice(12)], [...V3_EXTRA, ...V4_EXTRA]);
   const row = env.rows[2];
   assert.equal(row[11], "uuid-1");
-  assert.deepEqual([...row.slice(12)], ["chatbot", "en", "qa@example.com", "correo", "sí", "2026-11-v1", "2026-11-23T10:00:00.000Z", "Precalificado", "property=casa; decision=si", "chat-1"]);
+  assert.deepEqual([...row.slice(12)], ["chatbot", "en", "qa@example.com", "correo", "sí", "2026-11-v1", "2026-11-23T10:00:00.000Z", "Precalificado", "property=casa; decision=si", "chat-1", "", "", "", "", ""]);
 });
 
 test("v2: una pestaña con otro formato de encabezados no se modifica y guarda solo las 12 columnas", () => {
@@ -208,9 +213,9 @@ test("v2: métricas del chatbot por día, sin datos personales", () => {
   assert.equal(env.post({ type: "chat_event", event: "chat_open" }).ok, true);
   assert.equal(env.post({ type: "chat_event", event: "chat_complete" }).ok, true);
   assert.equal(env.post({ type: "chat_event", event: "borrar_todo" }).ok, false);
-  assert.deepEqual([...env.metricRows[0]], ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified"]);
+  assert.deepEqual([...env.metricRows[0]], [...V2_METRICS, ...V4_METRICS]);
   assert.equal(env.metricRows.length, 2);
-  assert.deepEqual([...env.metricRows[1]], ["'2026-11-23", 2, 0, 1, 0]);
+  assert.deepEqual([...env.metricRows[1]], ["'2026-11-23", 2, 0, 1, 0, 0, 0, 0]);
   assert.equal(env.rows.length, 0, "un evento nunca escribe en Leads");
 });
 
@@ -220,4 +225,40 @@ test("v3: acepta los servicios nuevos (TV, celular, identidad, pagos)", () => {
     assert.equal(env.post({ ...PAYLOAD, service }).ok, true, service);
   }
   assert.equal(createEnv().post({ ...PAYLOAD, service: "Hipotecas" }).ok, false);
+});
+
+test("v4: actualiza una hoja v3 en producción sin mover columnas y guarda los datos del analizador", () => {
+  const env = createEnv({ existing: [[...V1_HEADERS, ...V3_EXTRA], [new Date(), "Ana", "(281) 555-0101"]] });
+  const res = env.post({
+    ...CHAT_BODY,
+    channel: "analizador",
+    billAmount: "200",
+    monthlyKwh: "1000",
+    effectiveCentsKwh: "20",
+    contractExpiration: "2027-01-15",
+    leadSource: "Energy Bill Analyzer",
+  });
+  assert.equal(res.ok, true);
+  assert.deepEqual([...env.rows[0]], [...V1_HEADERS, ...V3_EXTRA, ...V4_EXTRA]);
+  const row = env.rows[2];
+  assert.equal(row[12], "analizador");
+  assert.deepEqual([...row.slice(22)], ["200", "1000", "20", "2027-01-15", "Energy Bill Analyzer"]);
+});
+
+test("v4: una hoja con columnas propias a la derecha no se toca (guarda solo las 12 originales)", () => {
+  const env = createEnv({ existing: [[...V1_HEADERS, ...V3_EXTRA, "MiNota"], ["x"]] });
+  assert.equal(env.post(CHAT_BODY).ok, true);
+  assert.equal(env.rows[0][22], "MiNota");
+  assert.equal(env.rows[2].length, 12);
+});
+
+test("v4: la pestaña Chatbot v2 gana los contadores del analizador sin perder los días anteriores", () => {
+  const env = createEnv();
+  env.metricRows.push([...V2_METRICS], ["'2026-11-22", 5, 3, 1, 1]);
+  env.ctx.receptorMetricsSheet(); // crea la referencia a la pestaña existente
+  assert.equal(env.post({ type: "chat_event", event: "analyzer_calc" }).ok, true);
+  assert.equal(env.post({ type: "chat_event", event: "analyzer_cta" }).ok, true);
+  assert.deepEqual([...env.metricRows[0]], [...V2_METRICS, ...V4_METRICS]);
+  assert.deepEqual([...env.metricRows[1]], ["'2026-11-22", 5, 3, 1, 1]);
+  assert.deepEqual([...env.metricRows[2]], ["'2026-11-23", 0, 0, 0, 0, 0, 1, 1]);
 });

@@ -75,7 +75,12 @@ var V360 = {
     fbclid: ["fbclid"],
     device: ["device", "dispositivo"],
     answers: ["answers", "respuestas"],
+    channel: ["channel", "canal"],
+    leadSource: ["leadsource", "lead source", "origen del lead"],
+    leadId: ["leadid", "lead id", "chatleadid"],
   },
+  /* Pestaña "Chatbot" que llena el receptor: contadores anónimos por día. */
+  FUNNEL_EVENTS: ["chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
 };
 
 /* =========================================================
@@ -157,9 +162,39 @@ function v360ReadLeads(values) {
       ad: String(get(row, "ad") || "").trim(),
       device: String(get(row, "device") || "").trim(),
       answers: v360ParseAnswers(get(row, "answers")),
+      channel: v360Channel(get(row, "leadSource"), get(row, "channel")),
+      leadId: String(get(row, "leadId") || "").trim(),
     });
   }
   return leads;
+}
+
+/* Canal de entrada legible: Energy Bill Analyzer, Chatbot o Formulario. */
+function v360Channel(leadSource, channel) {
+  var src = String(leadSource || "").trim();
+  if (src) return src;
+  var c = String(channel || "").trim().toLowerCase();
+  if (c === "analizador") return "Energy Bill Analyzer";
+  if (c === "chatbot") return "Chatbot";
+  return "Formulario";
+}
+
+/* Suma los contadores diarios de la pestaña "Chatbot" dentro del periodo de la meta.
+   values: filas con encabezados [Fecha, chat_open, …]. Devuelve {} si no hay pestaña. */
+function v360ReadFunnel(values, start, end) {
+  var out = {};
+  V360.FUNNEL_EVENTS.forEach(function (e) { out[e] = 0; });
+  if (!values || values.length < 2) return out;
+  var header = values[0].map(function (h) { return String(h).trim(); });
+  for (var r = 1; r < values.length; r++) {
+    var day = values[r][0] instanceof Date ? values[r][0] : new Date(String(values[r][0]).replace(/^'/, "") + "T12:00:00");
+    if (start && (isNaN(day.getTime()) || day.getTime() < start.getTime() || (end && day.getTime() >= end.getTime()))) continue;
+    V360.FUNNEL_EVENTS.forEach(function (e) {
+      var i = header.indexOf(e);
+      if (i > 0) out[e] += Number(values[r][i]) || 0;
+    });
+  }
+  return out;
 }
 
 function v360IsTexasZip(zip) {
@@ -254,8 +289,11 @@ function v360Num(value) {
   return isFinite(n) && n > 0 ? n : null;
 }
 
-/* Lee la pestaña Tarifas. Acepta precios en centavos (16.9) o en dólares (0.169). */
-function v360ReadTariffs(values) {
+/* Lee la pestaña Tarifas. Acepta precios en centavos (16.9) o en dólares (0.169).
+   Con `now` y `maxAgeDays`, descarta las filas cuya columna "Actualizado" es más
+   vieja que ese límite: una tarifa vencida no se usa para recomendar (nov. 2026).
+   Las filas sin fecha se siguen usando, pero quedan marcadas como `undated`. */
+function v360ReadTariffs(values, now, maxAgeDays) {
   if (!values || values.length < 2) return [];
   var cents = function (v) {
     var n = v360Num(v);
@@ -270,6 +308,9 @@ function v360ReadTariffs(values) {
     if (!tdu || !plan) continue;
     var p = { tdu: tdu, plan: plan, term: v360Num(row[2]), p500: cents(row[3]), p1000: cents(row[4]), p2000: cents(row[5]) };
     if (p.p500 === null && p.p1000 === null && p.p2000 === null) continue;
+    var updated = v360ToDate(row[6]);
+    p.undated = !updated;
+    if (updated && now && maxAgeDays && now.getTime() - updated.getTime() > maxAgeDays * 86400000) continue;
     out.push(p);
   }
   return out;
@@ -308,7 +349,7 @@ function v360SuggestPlan(lead, tariffs) {
     if (price !== null && (!best || price < best.price)) best = { plan: t, price: price };
   });
   if (!best) return out;
-  out.planName = best.plan.plan + (best.plan.term ? " (" + best.plan.term + " meses)" : "");
+  out.planName = best.plan.plan + (best.plan.term ? " (" + best.plan.term + " meses)" : "") + (best.plan.undated ? " [sin fecha en Tarifas: verificar EFL]" : "");
   out.planCents = Math.round(best.price * 10) / 10;
   if (out.currentCents) out.monthlyDiff = Math.round(((out.currentCents - out.planCents) * kwh) / 100);
   return out;
@@ -444,6 +485,9 @@ function v360ComputeMetrics(leads, statusByKey, spendRows, settings, now) {
     excludedTests: leads.filter(function (l) { return l.status === "Prueba"; }).length,
     excludedDuplicates: leads.filter(function (l) { return l.status === "Duplicado"; }).length,
     byService: v360Count(valid, function (l) { return l.service; }),
+    byChannel: v360Count(valid, function (l) { return l.channel || "Formulario"; }),
+    qualifiedByChannel: v360Count(qualified, function (l) { return l.channel || "Formulario"; }),
+    funnel: settings.funnel || null,
     bySource: v360Count(valid, function (l) { return [l.source, l.medium].filter(Boolean).join(" / "); }),
     byContent: v360Count(valid.filter(function (l) { return l.ad || l.campaign; }), function (l) {
       return [l.campaign, l.ad].filter(Boolean).join(" · ");
@@ -498,6 +542,18 @@ function v360PanelRows(m) {
   rows.push(["", ""], ["Leads por campaña / publicación", ""]);
   if (!m.byContent.length) rows.push(["  (sin leads con UTM todavía)", ""]);
   m.byContent.forEach(function (r) { rows.push(["  " + r.key, r.count]); });
+  rows.push(["", ""], ["Leads por canal (calificados entre paréntesis)", ""]);
+  var qByChannel = {};
+  (m.qualifiedByChannel || []).forEach(function (r) { qByChannel[r.key] = r.count; });
+  (m.byChannel || []).forEach(function (r) { rows.push(["  " + r.key, r.count + " (" + (qByChannel[r.key] || 0) + ")"]); });
+  if (m.funnel) {
+    var f = m.funnel;
+    rows.push(["", ""], ["Embudo del sitio (eventos anónimos)", ""],
+      ["  Visitas al analizador de factura", f.analyzer_view],
+      ["  Cálculos completados", f.analyzer_calc],
+      ["  Solicitudes de comparación", f.analyzer_cta],
+      ["  Chats abiertos / completados", f.chat_open + " / " + f.chat_complete]);
+  }
   rows.push(["", ""], ["Leads por servicio", ""]);
   m.byService.forEach(function (r) { rows.push(["  " + r.key, r.count]); });
   return rows.map(function (r) { return r.map(v360Safe); });
@@ -624,7 +680,8 @@ function v360LoadTariffs(ss) {
   } catch (e) {
     console.warn("No se pudo aplicar la lista de distribuidoras: " + e);
   }
-  return v360ReadTariffs(v360Retry(function () { return sheet.getDataRange().getValues(); }));
+  var maxAge = Number(v360Props().get("TARIFF_MAX_AGE_DAYS", 45)) || 45;
+  return v360ReadTariffs(v360Retry(function () { return sheet.getDataRange().getValues(); }), new Date(), maxAge);
 }
 
 function v360Log(ss, level, message) {
@@ -688,6 +745,23 @@ function v360LoadAll(ss) {
 }
 
 /* Revisa leads nuevos. Idempotente: un lead se agrega a Seguimiento una sola vez. */
+/* Agrega a settings los contadores de la pestaña "Chatbot" (si existe) para el Panel. */
+function v360WithFunnel(ss, settings) {
+  var out = {};
+  Object.keys(settings).forEach(function (k) { out[k] = settings[k]; });
+  try {
+    var sheet = ss.getSheetByName("Chatbot");
+    if (!sheet || sheet.getLastRow() < 2) return out;
+    var values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+    var start = settings.goalStart || null;
+    var end = start ? new Date(start.getTime() + settings.goalDays * 86400000) : null;
+    out.funnel = v360ReadFunnel(values, start, end);
+  } catch (e) {
+    /* sin embudo: el panel sigue igual */
+  }
+  return out;
+}
+
 function processNewLeads() {
   var settings = v360Settings();
   var lock = LockService.getScriptLock();
@@ -715,7 +789,7 @@ function processNewLeads() {
 
     // Se aplica en cada revisión para que todas las filas tengan la lista de estados vigente.
     v360ApplyStatusValidation(data.tracking.sheet);
-    var metrics = v360ComputeMetrics(data.leads, v360ReadTracking(ss).statusByKey, v360ReadSpend(ss), settings, now);
+    var metrics = v360ComputeMetrics(data.leads, v360ReadTracking(ss).statusByKey, v360ReadSpend(ss), v360WithFunnel(ss, settings), now);
     v360WritePanel(ss, metrics);
     v360CheckBudget(settings, metrics);
     v360Log(ss, "info", "Revisión completa: " + fresh.length + " lead(s) nuevo(s) en Seguimiento.");
@@ -787,7 +861,7 @@ function sendWeeklyReport() {
   try {
     ss = v360Spreadsheet(settings);
     var data = v360LoadAll(ss);
-    var metrics = v360ComputeMetrics(data.leads, data.tracking.statusByKey, v360ReadSpend(ss), settings, new Date());
+    var metrics = v360ComputeMetrics(data.leads, data.tracking.statusByKey, v360ReadSpend(ss), v360WithFunnel(ss, settings), new Date());
     var weekly = v360EnsureSheet(ss, V360.SHEETS.weekly, V360.WEEKLY_HEADERS);
     weekly.appendRow([metrics.generatedAt, metrics.leadsValid, metrics.electricityTexas, metrics.qualified,
       metrics.spend == null ? "" : metrics.spend, metrics.costPerLead == null ? "" : metrics.costPerLead,

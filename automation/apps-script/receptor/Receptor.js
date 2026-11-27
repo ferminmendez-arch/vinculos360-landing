@@ -12,6 +12,10 @@
      escribir la fila. Si algo falla responde {"ok":false,...}: el sitio
      no abre WhatsApp como si estuviera guardado y reintenta después.
 
+   v4 (analizador de factura, compatible con v1–v3): columnas BillAmount,
+   MonthlyKwh, EffectiveCentsKwh, ContractExpiration y LeadSource al final,
+   y contadores analyzer_view / analyzer_calc / analyzer_cta en "Chatbot".
+
    v2 (chatbot, compatible con v1): si el cuerpo trae claves extra del
    chatbot (channel, language, email, preferredContact, consent,
    consentVersion, consentAt, qualification, answers, chatLeadId), se
@@ -31,10 +35,13 @@
 var RECEPTOR = {
   SHEET: "Leads",
   HEADERS: ["Timestamp", "Name", "Phone", "ZipCode", "Service", "Source", "Medium", "Campaign", "Ad", "Fbclid", "Device", "LeadId"],
-  EXTRA_HEADERS: ["Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId"],
-  EXTRA_KEYS: ["channel", "language", "email", "preferredContact", "consent", "consentVersion", "consentAt", "qualification", "answers", "chatLeadId"],
+  // v4 (analizador de factura): BillAmount … LeadSource al final. Las anteriores no se mueven.
+  EXTRA_HEADERS: ["Channel", "Language", "Email", "PreferredContact", "Consent", "ConsentVersion", "ConsentAt", "Qualification", "Answers", "ChatLeadId",
+    "BillAmount", "MonthlyKwh", "EffectiveCentsKwh", "ContractExpiration", "LeadSource"],
+  EXTRA_KEYS: ["channel", "language", "email", "preferredContact", "consent", "consentVersion", "consentAt", "qualification", "answers", "chatLeadId",
+    "billAmount", "monthlyKwh", "effectiveCentsKwh", "contractExpiration", "leadSource"],
   METRICS_SHEET: "Chatbot",
-  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified"],
+  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta"],
   SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos", "Otros servicios"],
   MAX_BODY: 5000,
   MAX_FIELD: 300,
@@ -129,7 +136,13 @@ function receptorMetricsSheet() {
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, RECEPTOR.METRICS_HEADERS.length).setValues([RECEPTOR.METRICS_HEADERS]);
     sheet.setFrozenRows(1);
+    return sheet;
   }
+  // v4: agrega los encabezados nuevos a la derecha si faltan (sin mover los existentes).
+  var current = sheet.getRange(1, 1, 1, RECEPTOR.METRICS_HEADERS.length).getValues()[0].map(function (h) { return String(h); });
+  var compatible = RECEPTOR.METRICS_HEADERS.every(function (h, i) { return !current[i] || current[i] === h; });
+  var missing = RECEPTOR.METRICS_HEADERS.some(function (h, i) { return current[i] !== h; });
+  if (compatible && missing) sheet.getRange(1, 1, 1, RECEPTOR.METRICS_HEADERS.length).setValues([RECEPTOR.METRICS_HEADERS]);
   return sheet;
 }
 

@@ -19,6 +19,7 @@ export default function Chatbot() {
   const s = CHAT_STRINGS[lang] || CHAT_STRINGS.es;
   const [open, setOpen] = useState(chatRequestedInUrl);
   const [mounted, setMounted] = useState(chatRequestedInUrl);
+  const [prefill, setPrefill] = useState(null);
   const launcherRef = useRef(null);
   const openedOnce = useRef(false);
 
@@ -39,11 +40,20 @@ export default function Chatbot() {
     }
   }, [open, lang]);
 
-  // Otros elementos del sitio (por ejemplo, la tarjeta "En línea" del inicio) abren el chat con este evento.
+  // Otros elementos del sitio abren el chat con este evento. El Analizador de factura
+  // manda sus datos en event.detail.analyzer para no volver a preguntarlos.
   useEffect(() => {
-    window.addEventListener("v360:open-chat", openChat);
-    return () => window.removeEventListener("v360:open-chat", openChat);
-  }, [openChat]);
+    const onOpen = (event) => {
+      const analyzer = event?.detail?.analyzer;
+      if (analyzer) {
+        setPrefill({ analyzer, nonce: Date.now() });
+        trackChatEvent("chat_start", { language: lang, serviceKey: "electricidad" });
+      }
+      openChat();
+    };
+    window.addEventListener("v360:open-chat", onOpen);
+    return () => window.removeEventListener("v360:open-chat", onOpen);
+  }, [openChat, lang]);
 
   const closeChat = useCallback(() => {
     setOpen(false);
@@ -69,7 +79,7 @@ export default function Chatbot() {
 
       {mounted && (
         <Suspense fallback={null}>
-          <ChatPanel open={open} onClose={closeChat} lang={lang} />
+          <ChatPanel key={prefill?.nonce || "chat"} open={open} onClose={closeChat} lang={lang} prefill={prefill} />
         </Suspense>
       )}
     </>

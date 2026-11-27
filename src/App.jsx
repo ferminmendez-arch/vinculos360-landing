@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "./components/Header.jsx";
 import Hero from "./components/Hero.jsx";
 import Services from "./components/Services.jsx";
+import BillAnalyzer from "./components/BillAnalyzer.jsx";
 import HowItWorks from "./components/HowItWorks.jsx";
 import Testimonials from "./components/Testimonials.jsx";
 import ContactSection from "./components/ContactSection.jsx";
@@ -48,6 +49,7 @@ export default function App({ lang = "es" }) {
       <main id="contenido">
         <Hero />
         <Services selectedService={selectedService} onSelect={selectService} />
+        <BillAnalyzer />
         <HowItWorks />
         <Testimonials />
         <ContactSection selectedService={selectedService} onSelectService={selectService} />
