@@ -135,11 +135,39 @@ export async function schedulePost(item, config, { fetchImpl = globalThis.fetch 
   });
 }
 
+/* Obtiene el token de la página a partir del token configurado.
+   Con un token de "usuario del sistema" (no caduca), Meta entrega aquí el
+   token de la página. Si ya es un token de página, devuelve el mismo. */
+export async function resolvePageToken(config, { fetchImpl = globalThis.fetch } = {}) {
+  const url = `https://graph.facebook.com/${config.graphVersion}/${encodeURIComponent(config.pageId)}?fields=access_token`;
+  let response;
+  try {
+    response = await fetchImpl(url, { headers: { Authorization: `Bearer ${config.token}` } });
+  } catch (error) {
+    throw new PublishError(`No se pudo consultar la página (${error?.cause?.code || error?.code || "conexión"}).`, { retryable: true });
+  }
+  let json;
+  try {
+    json = await response.json();
+  } catch {
+    json = {};
+  }
+  if (response.ok && json.access_token) return json.access_token;
+  const err = json.error || {};
+  throw new PublishError(`No se pudo obtener el token de la página: Meta respondió ${response.status}${err.code ? ` (código ${err.code})` : ""}: ${err.message || "sin detalle"}`, {
+    retryable: response.status >= 500 || response.status === 429,
+    status: response.status,
+    code: err.code,
+  });
+}
+
 export async function run(files, { env = process.env, now = new Date(), fetchImpl, sleep, logger, business = loadBusiness(), previousStatusOf } = {}) {
   const log = logger || createLogger("publicador");
   const config = readConfig(env);
   const plan = planPublications(files, { now, business, previousStatusOf });
   const results = [];
+  let pageConfig = null;
+  let tokenError = null;
 
   for (const item of plan) {
     if (item.action !== "publish") {
@@ -153,8 +181,26 @@ export async function run(files, { env = process.env, now = new Date(), fetchImp
       results.push({ file: item.file, outcome: "dry-run", reason });
       continue;
     }
+    if (!pageConfig && !tokenError) {
+      try {
+        const pageToken = await withRetry(() => resolvePageToken(config, { fetchImpl }), {
+          attempts: 3,
+          baseDelayMs: 2000,
+          sleep,
+          isRetryable: (e) => e instanceof PublishError && e.retryable,
+        });
+        pageConfig = { ...config, token: pageToken };
+      } catch (error) {
+        tokenError = error;
+        log.error("No se pudo obtener el token de la página.", { error: error.message });
+      }
+    }
+    if (tokenError) {
+      results.push({ file: item.file, outcome: "failed", reason: tokenError.message });
+      continue;
+    }
     try {
-      const res = await withRetry(() => schedulePost(item, config, { fetchImpl }), {
+      const res = await withRetry(() => schedulePost(item, pageConfig, { fetchImpl }), {
         attempts: 3,
         baseDelayMs: 2000,
         sleep,
