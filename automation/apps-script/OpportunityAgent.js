@@ -618,10 +618,18 @@ function oppFetchTrec(now) {
   var since = new Date(now.getTime() - 3 * 86400000).toISOString().slice(0, 19);
   var where = "license_type='Sales Agent' AND status='Active' AND updated > '" + since + "' AND upper(county) in(" +
     OPP.TREC_COUNTIES.map(function (c) { return "'" + c + "'"; }).join(",") + ")";
-  var url = OPP.TREC_DATASET + "?$limit=500&$where=" + encodeURIComponent(where);
+  // UrlFetchApp rechaza URLs con ' ( ) sin codificar ("Address unavailable"): se codifican todos.
+  var url = OPP.TREC_DATASET + "?%24limit=500&%24where=" + oppEncode(where);
   var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, headers: { Accept: "application/json" } });
   if (res.getResponseCode() !== 200) throw new Error("TREC respondió " + res.getResponseCode());
   return JSON.parse(res.getContentText());
+}
+
+/* encodeURIComponent deja sin codificar ! ' ( ) *; UrlFetchApp no los acepta en la URL. */
+function oppEncode(value) {
+  return encodeURIComponent(value).replace(/[!'()*]/g, function (c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
 }
 
 /* Diario (6 a. m.): completa, deduplica, agrega Trade de TREC, vincula leads y actualiza Embudo.
