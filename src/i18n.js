@@ -163,6 +163,8 @@ const es = {
     navLabel: "Pie de página",
     contactTitle: "Contacto",
     rights: "Todos los derechos reservados.",
+    guides: "Guías de energía eléctrica",
+    privacy: "Privacidad",
   },
 
   mobileBar: { call: "Llamar", request: "Solicitar ayuda" },
@@ -336,6 +338,8 @@ const en = {
     navLabel: "Footer",
     contactTitle: "Contact",
     rights: "All rights reserved.",
+    guides: "Electricity guides (Spanish)",
+    privacy: "Privacy (Spanish)",
   },
 
   mobileBar: { call: "Call", request: "Get help" },

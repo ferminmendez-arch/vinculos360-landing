@@ -1,3 +1,4 @@
+/* global V360, v360AlertFailure, v360ComputeMetrics, v360DateEs, v360EnsureSheet, v360LoadAll, v360Log, v360Props, v360ReadSpend, v360Retry, v360Round, v360Safe, v360Settings, v360Spreadsheet, v360WithFunnel -- definidas en LeadAgent.js (mismo proyecto de Apps Script) */
 /* =========================================================
    VÍNCULOS 360 — AGENTE DE OPORTUNIDADES (AI Opportunity Discovery)
 
@@ -698,7 +699,7 @@ function sendDailyBrief(at) {
   var leadsData = v360LoadAll(ss);
   var lm = v360ComputeMetrics(leadsData.leads, leadsData.tracking.statusByKey, v360ReadSpend(ss), settings, now);
   var end = settings.goalStart ? new Date(settings.goalStart.getTime() + settings.goalDays * 86400000) : null;
-  var last = {};
+  var last;
   try { last = JSON.parse(v360Props().get("OPP_SOURCES_LAST", "{}")); } catch (e) { last = {}; }
   var sources = last.sources || [];
   if (!last.at || now.getTime() - new Date(last.at).getTime() > 26 * 3600000) {

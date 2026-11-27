@@ -1,0 +1,33 @@
+/* Estilos de las guías y páginas estáticas (sin dependencias). */
+:root { --brand: #0b24a8; --brand-600: #1b37c0; --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --wa: #128c4a; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); line-height: 1.65; background: #fff; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+.top { border-bottom: 1px solid var(--line); background: #fff; }
+.top-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; padding-bottom: 10px; }
+.logo img { display: block; height: 40px; width: auto; }
+.wa { background: var(--wa); color: #fff; text-decoration: none; font-weight: 600; padding: 10px 16px; border-radius: 999px; font-size: 0.95rem; white-space: nowrap; }
+.wa:hover, .wa:focus-visible { background: #0e7a40; }
+main { padding-top: 24px; padding-bottom: 48px; }
+.crumbs { font-size: 0.9rem; color: var(--muted); }
+.crumbs a { color: var(--muted); }
+h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.2; margin: 16px 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 32px 0 8px; }
+h3 { font-size: 1.05rem; margin: 20px 0 4px; }
+.meta { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; }
+.lead { font-size: 1.15rem; color: #1e293b; }
+a { color: var(--brand-600); }
+li { margin: 6px 0; }
+.cta { margin: 36px 0; padding: 24px; border-radius: 20px; background: #eef2ff; border: 1px solid #c2ccfb; }
+.cta h2 { margin-top: 0; }
+.btn { display: inline-block; margin-top: 8px; background: var(--brand); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 22px; border-radius: 999px; }
+.btn:hover, .btn:focus-visible { background: var(--brand-600); }
+.sources { font-size: 0.95rem; }
+.more { font-size: 0.95rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; margin-top: 32px; }
+.cards { list-style: none; padding: 0; display: grid; gap: 12px; }
+.cards a { display: block; padding: 18px; border: 1px solid var(--line); border-radius: 16px; text-decoration: none; color: var(--ink); }
+.cards a:hover, .cards a:focus-visible { border-color: var(--brand-600); }
+.cards span { display: block; color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+.foot { border-top: 1px solid var(--line); background: #f8fafc; color: var(--muted); font-size: 0.9rem; padding: 24px 0; }
+a:focus-visible, .btn:focus-visible, .wa:focus-visible { outline: 3px solid #94a5f5; outline-offset: 2px; }
+@media (max-width: 420px) { .wa { padding: 9px 12px; font-size: 0.85rem; } .logo img { height: 34px; } }

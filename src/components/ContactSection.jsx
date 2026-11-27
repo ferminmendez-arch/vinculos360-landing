@@ -4,6 +4,7 @@ import { SERVICES } from "../content.js";
 import { useLang, useStrings } from "../i18n.js";
 import { PHONE_DISPLAY, PHONE_E164 } from "../config.js";
 import { getTrackingData } from "../lib/tracking.js";
+import { trackEvent as trackConversion, trackWhatsApp } from "../lib/analytics.js";
 import { buildLeadWhatsAppMessage, buildWhatsAppUrl } from "../lib/whatsapp.js";
 import { cleanName, digitsOnly, formatUsPhone, validateLead } from "../lib/validation.js";
 import {
@@ -71,6 +72,7 @@ export default function ContactSection({ selectedService, onSelectService }) {
   };
 
   const goToWhatsApp = (url) => {
+    trackWhatsApp({ language: lang, entry_point: "formulario" });
     window.setTimeout(() => window.location.assign(url), 500);
   };
 
@@ -122,6 +124,8 @@ export default function ContactSection({ selectedService, onSelectService }) {
     trackEvent(`lead_${result.status}`, { service: selectedService, language: lang });
 
     if (result.status === "confirmed") {
+      // Solo aquí: el receptor confirmó que el lead quedó guardado.
+      trackConversion("lead_submitted", { language: lang, service: SERVICES.find((x) => x.value === selectedService)?.slug || "", entry_point: "formulario" });
       rememberConfirmed(payload);
       removeFromQueue(payload);
       setStatus("confirmed");

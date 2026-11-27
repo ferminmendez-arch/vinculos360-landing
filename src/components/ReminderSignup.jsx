@@ -5,6 +5,7 @@ import { buildReminderPayload, validateReminder } from "../lib/billAnalyzer.js";
 import { submitChatLead, toSheetPayload, trackChatEvent } from "../lib/chatbot/api.js";
 import { enqueueLead, rememberConfirmed, removeFromQueue, wasRecentlyConfirmed } from "../lib/leads.js";
 import { getTrackingData } from "../lib/tracking.js";
+import { trackEvent } from "../lib/analytics.js";
 
 /* Recordatorio de vencimiento: el visitante deja su WhatsApp con consentimiento y el dueño
    le escribe unas semanas antes del vencimiento (el agente de leads le avisa). No abre
@@ -63,6 +64,7 @@ export default function ReminderSignup({ analyzer, lang, s }) {
       rememberConfirmed(sheetPayload);
       removeFromQueue(sheetPayload);
       trackChatEvent("reminder_signup", { language: lang, serviceKey: "electricidad" });
+      trackEvent("lead_submitted", { language: lang, service: "electricidad", entry_point: "recordatorio" });
       setStatus("confirmed");
       return;
     }

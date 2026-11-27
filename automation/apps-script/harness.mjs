@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE = fs.readFileSync(path.join(DIR, "LeadAgent.js"), "utf8");
 /* Archivos adicionales del mismo proyecto de Apps Script (mismo ámbito global). */
-const EXTRA_FILES = { opportunities: "OpportunityAgent.js" };
+const EXTRA_FILES = { opportunities: "OpportunityAgent.js", search: "SearchAgent.js" };
 
 class MockRange {
   constructor(sheet, row, col, numRows = 1, numCols = 1) {
@@ -155,6 +155,7 @@ export function createAppsScriptEnv({ sheets = {}, props = {}, lockAvailable = t
       deleteTrigger: (t) => triggers.splice(triggers.indexOf(t), 1),
       newTrigger: triggerBuilder,
       WeekDay: { MONDAY: "MONDAY" },
+      getOAuthToken: () => "TOKEN-SIMULADO",
     },
   };
   const context = vm.createContext(sandbox);

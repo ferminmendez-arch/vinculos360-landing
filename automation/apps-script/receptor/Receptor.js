@@ -52,7 +52,7 @@ var RECEPTOR = {
   EXTRA_KEYS: ["channel", "language", "email", "preferredContact", "consent", "consentVersion", "consentAt", "qualification", "answers", "chatLeadId",
     "billAmount", "monthlyKwh", "effectiveCentsKwh", "contractExpiration", "leadSource"],
   METRICS_SHEET: "Chatbot",
-  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta", "analyzer_share", "reminder_signup"],
+  METRICS_HEADERS: ["Fecha", "chat_open", "chat_start", "chat_complete", "chat_qualified", "analyzer_view", "analyzer_calc", "analyzer_cta", "analyzer_share", "reminder_signup", "analyzer_started", "lead_submitted", "whatsapp_clicked"],
   SERVICES: ["Electricidad", "Internet", "Seguridad y monitoreo", "Televisión", "Telefonía celular", "Protección de identidad", "Procesamiento de pagos", "Otros servicios"],
   MAX_BODY: 5000,
   MAX_FIELD: 300,

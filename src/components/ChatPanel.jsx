@@ -18,6 +18,7 @@ import {
 import { submitChatLead, toSheetPayload, trackChatEvent } from "../lib/chatbot/api.js";
 import { enqueueLead, rememberConfirmed, removeFromQueue, wasRecentlyConfirmed } from "../lib/leads.js";
 import { getTrackingData } from "../lib/tracking.js";
+import { trackEvent } from "../lib/analytics.js";
 import { buildWhatsAppUrl } from "../lib/whatsapp.js";
 import { digitsOnly, formatUsPhone } from "../lib/validation.js";
 
@@ -228,6 +229,8 @@ export default function ChatPanel({ open, onClose, lang, prefill = null }) {
       setStatus("confirmed");
       const qualified = result.via === "api" ? result.prequalified : prequalify(state).prequalified;
       trackChatEvent("chat_complete", { language: lang, serviceKey: state.serviceKey });
+      // Solo con confirmación del guardado (no con la trampa ni con duplicados).
+      trackEvent("lead_submitted", { language: lang, service: state.serviceKey, entry_point: payload.entry === "analizador" ? "analizador" : "chat" });
       if (qualified) trackChatEvent("chat_qualified", { language: lang, serviceKey: state.serviceKey });
       try {
         window.fbq?.("track", "Lead", { content_name: sheetPayload.service });

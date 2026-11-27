@@ -135,6 +135,10 @@ export const EVENT_NAMES = [
   // Recordatorio de vencimiento y "compartir" del analizador (nov. 2026).
   "analyzer_share",
   "reminder_signup",
+  // Medición Google (nov. 2026): primer dato en el analizador, lead confirmado y clic a WhatsApp.
+  "analyzer_started",
+  "lead_submitted",
+  "whatsapp_clicked",
 ];
 
 /* Punto de entrada del lead. "analizador" = llegó desde el Analizador de factura. */
