@@ -70,8 +70,9 @@ export function pickTopics(topics, used, count, business) {
   return picked;
 }
 
-export function buildLink(business, topicId, lang = "es") {
-  const base = lang === "en" ? `${business.siteUrl}/en/` : `${business.siteUrl}/`;
+/* guide: guía SEO relacionada (public/guias/<guide>/). Solo en español: las guías aún no tienen versión en inglés. */
+export function buildLink(business, topicId, lang = "es", guide = "") {
+  const base = lang === "en" ? `${business.siteUrl}/en/` : guide ? `${business.siteUrl}/guias/${guide}/` : `${business.siteUrl}/`;
   const params = new URLSearchParams({
     service: "electricidad",
     utm_source: business.utm.source,
@@ -83,7 +84,7 @@ export function buildLink(business, topicId, lang = "es") {
 }
 
 export function renderPost(topic, slot, business) {
-  const linkEs = buildLink(business, topic.id, "es");
+  const linkEs = buildLink(business, topic.id, "es", topic.guide);
   const linkEn = buildLink(business, topic.id, "en");
   const scheduledAt = zonedToUtc(slot.date, slot.time, business.timezone);
   const front = {

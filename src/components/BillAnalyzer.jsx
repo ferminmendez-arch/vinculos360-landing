@@ -76,7 +76,12 @@ export default function BillAnalyzer() {
     if (result) resultRef.current?.focus({ preventScroll: false });
   }, [result]);
 
+  const started = useRef(false);
   const update = (field) => (event) => {
+    if (!started.current && event.target.value) {
+      started.current = true;
+      trackChatEvent("analyzer_started", { language: lang, serviceKey: "electricidad" });
+    }
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };

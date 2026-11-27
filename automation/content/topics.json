@@ -3,6 +3,7 @@
   "topics": [
     {
       "id": "efl-que-es",
+      "guide": "costo-por-kwh",
       "pillar": "Entiende tu plan",
       "title_es": "¿Qué es la Etiqueta de Datos de Electricidad (EFL)?",
       "es": "⚡ Antes de firmar un plan de luz en Texas, pide la EFL (Electricity Facts Label).\n\nEs un documento corto que todo proveedor debe publicar para cada plan residencial. Ahí ves el precio promedio por kWh, el tipo de plan, la duración del contrato y los cargos.\n\nTip: la EFL te deja comparar planes \"manzana con manzana\".\n\n¿Quieres que te ayudemos a revisar tus opciones? Escríbenos 👉 {{link}}",
@@ -14,6 +15,7 @@
     },
     {
       "id": "efl-500-1000-2000",
+      "guide": "costo-por-kwh",
       "pillar": "Entiende tu plan",
       "title_es": "El precio cambia según cuánto consumes",
       "es": "🔎 En la EFL vas a ver tres precios: para 500, 1,000 y 2,000 kWh al mes.\n\n¿Por qué? Porque algunos planes tienen cargos fijos o créditos que solo aplican en ciertos niveles de consumo. El precio que importa es el que se parece a tu consumo real.\n\nRevisa tu factura y busca cuántos kWh usaste en los últimos meses antes de comparar.\n\n¿Dudas? Te orientamos 👉 {{link}}",
@@ -96,6 +98,7 @@
     },
     {
       "id": "fin-de-contrato",
+      "guide": "vence-tu-contrato-de-luz",
       "pillar": "Entiende tu plan",
       "title_es": "¿Cuándo vence tu contrato de luz?",
       "es": "📅 ¿Sabes cuándo vence tu contrato de luz?\n\nLa fecha y las condiciones de renovación están en tus documentos (EFL y TOS). Anótala en tu calendario: así tienes tiempo de comparar con calma antes de que llegue.\n\nSi no encuentras tus documentos, tu proveedor debe dártelos cuando los pidas.\n\n¿Te ayudamos a revisarlo? 👉 {{link}}",
@@ -117,6 +120,7 @@
     },
     {
       "id": "lee-tu-factura",
+      "guide": "costo-por-kwh",
       "pillar": "Entiende tu factura",
       "title_es": "3 datos de tu factura que necesitas para comparar",
       "es": "🧾 Para comparar planes de luz necesitas tres datos de tu factura:\n\n1. Cuántos kWh usaste (idealmente, varios meses).\n2. Tu ZIP y dirección del servicio.\n3. La fecha en que vence tu contrato actual.\n\nCon eso ya puedes revisar opciones con calma.\n\nMándanos tus dudas por WhatsApp 👉 {{link}}",

@@ -14,11 +14,12 @@
 ========================================================= */
 
 import { interpretResponse, sendLead } from "../leads.js";
+import { EVENTS_API, trackEvent } from "../analytics.js";
 import { SERVICE_VALUES, answersSummary, channelFor, savingsEstimate, sheetDevice } from "../../../api/src/lib/rules.js";
 import { analyzerFields } from "../../../api/src/lib/sinks.js";
 
 export const LEADS_API = "/api/leads";
-export const EVENTS_API = "/api/chat-event";
+export { EVENTS_API };
 const API_TIMEOUT_MS = 20000;
 
 /* Mismas claves que el formulario: el receptor de Apps Script actual las entiende. */
@@ -100,19 +101,6 @@ export async function submitChatLead(payload, { endpoint = LEADS_API, timeoutMs 
    teléfono, ZIP ni correo. */
 
 export function trackChatEvent(event, { language = "es", serviceKey = "" } = {}) {
-  const data = { event, language, serviceKey };
-  try {
-    window.dataLayer?.push({ event, chat_language: language, chat_service: serviceKey });
-  } catch {
-    /* sin GTM */
-  }
-  try {
-    const body = JSON.stringify(data);
-    if (navigator.sendBeacon?.(EVENTS_API, new Blob([body], { type: "application/json" }))) return;
-    globalThis
-      .fetch?.(EVENTS_API, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true })
-      .catch(() => {});
-  } catch {
-    /* las métricas nunca deben romper el chat */
-  }
+  // GA4 (nombres estándar) + /api/chat-event. Ver src/lib/analytics.js.
+  trackEvent(event, { language, service: serviceKey });
 }

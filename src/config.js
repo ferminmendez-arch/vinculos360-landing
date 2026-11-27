@@ -24,6 +24,16 @@ const DEFAULT_LEADS_ENDPOINT =
 export const LEADS_ENDPOINT =
   import.meta.env?.VITE_LEADS_ENDPOINT || DEFAULT_LEADS_ENDPOINT;
 
+/*
+  Google Analytics 4 — propiedad "Vínculos 360 — vinculos360.com"
+  (cuenta 116291991, propiedad 566078481, flujo web 16431531219).
+  El ID de medición es público. VITE_GA_MEASUREMENT_ID lo sobrescribe;
+  con VITE_GA_MEASUREMENT_ID=off no se carga Google Analytics.
+*/
+const DEFAULT_GA_MEASUREMENT_ID = "G-D5YCCQLYG1";
+const GA_ENV = import.meta.env?.VITE_GA_MEASUREMENT_ID;
+export const GA_MEASUREMENT_ID = GA_ENV === "off" ? "" : GA_ENV || DEFAULT_GA_MEASUREMENT_ID;
+
 /* Tiempo máximo de espera al guardar un lead. */
 export const LEAD_TIMEOUT_MS = 15000;
 

@@ -27,6 +27,16 @@ export default function Footer() {
                 </a>
               </li>
             ))}
+            <li>
+              <a href="/guias/" className="text-sm text-slate-600 hover:text-brand-700">
+                {t.footer.guides}
+              </a>
+            </li>
+            <li>
+              <a href="/privacidad/" className="text-sm text-slate-600 hover:text-brand-700">
+                {t.footer.privacy}
+              </a>
+            </li>
           </ul>
         </nav>
 
