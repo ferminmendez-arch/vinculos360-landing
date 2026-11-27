@@ -22,7 +22,8 @@
    se envía un correo de confirmación desde la cuenta del dueño. Nunca
    bloquea ni cambia la respuesta del lead si el correo falla. Máximo uno
    por dirección cada 6 h. Se apaga con la propiedad
-   CONFIRMATION_EMAIL_ENABLED = false.
+   CONFIRMATION_EMAIL_ENABLED = false. Las respuestas del cliente van a
+   fermin.mendez@vinculos360.com (Reply-To; propiedad CONFIRMATION_REPLY_TO).
 
    v2 (chatbot, compatible con v1): si el cuerpo trae claves extra del
    chatbot (channel, language, email, preferredContact, consent,
@@ -56,6 +57,10 @@ var RECEPTOR = {
   WHATSAPP: "12818257327",
   PHONE_DISPLAY: "(281) 825-7327",
   SITE: "www.vinculos360.com",
+  // Las respuestas del cliente llegan al correo del negocio (Microsoft 365). El envío sale de la
+  // cuenta de Google del script porque el SPF/DMARC de vinculos360.com solo autoriza a Microsoft.
+  REPLY_TO: "fermin.mendez@vinculos360.com",
+  FROM_NAME: "Fermín Mendez · Vínculos 360",
 };
 
 function receptorJson(obj) {
@@ -190,15 +195,15 @@ function receptorConfirmationEmail(data, lead) {
   }
   lines = lines.filter(Boolean);
   var signature = en
-    ? ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.SITE, "We are independent representatives."]
-    : ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.SITE, "Somos representantes independientes."];
+    ? ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.REPLY_TO + " · " + RECEPTOR.SITE, "We are independent representatives."]
+    : ["Fermín Mendez · Vínculos 360 · Houston, TX", RECEPTOR.REPLY_TO + " · " + RECEPTOR.SITE, "Somos representantes independientes."];
   var subject = en
     ? (reminder ? "Your contract reminder is set — Vínculos 360" : "We received your request — Vínculos 360")
     : (reminder ? "Tu recordatorio quedó listo — Vínculos 360" : "Recibimos tu solicitud — Vínculos 360");
   var html = "<div style=\"font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#0f172a;max-width:560px\">" +
     lines.map(function (l) { return "<p>" + receptorEsc(l).replace(receptorEsc(wa), "<a href=\"" + wa + "\">" + receptorEsc(wa) + "</a>") + "</p>"; }).join("") +
     "<p style=\"color:#475569;font-size:13px;margin-top:24px\">" + signature.map(receptorEsc).join("<br>") + "</p></div>";
-  return { to: email, subject: subject, body: lines.concat(["", ""], signature).join("\n\n"), htmlBody: html, name: "Vínculos 360" };
+  return { to: email, subject: subject, body: lines.concat(["", ""], signature).join("\n\n"), htmlBody: html, name: RECEPTOR.FROM_NAME, replyTo: RECEPTOR.REPLY_TO };
 }
 
 /* Envía la confirmación sin afectar nunca el resultado del lead. */
@@ -208,6 +213,8 @@ function receptorSendConfirmation(data, lead) {
     if (String(props.getProperty("CONFIRMATION_EMAIL_ENABLED") || "true") === "false") return "off";
     var msg = receptorConfirmationEmail(data, lead);
     if (!msg) return "skip";
+    var replyTo = props.getProperty("CONFIRMATION_REPLY_TO");
+    if (replyTo) msg.replyTo = replyTo;
     var cache = CacheService.getScriptCache();
     var key = "conf:" + msg.to;
     if (cache.get(key)) return "recent";
