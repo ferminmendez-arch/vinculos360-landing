@@ -32,7 +32,9 @@ function makeSheet(name, rows, { failAppend = false } = {}) {
   };
 }
 
-function createEnv({ failAppend = false, lockAvailable = true, existing = null, standalone = false, props = {}, today = "2026-11-23" } = {}) {
+function createEnv({ failAppend = false, lockAvailable = true, existing = null, standalone = false, props = {}, today = "2026-11-23", failMail = false } = {}) {
+  const mails = [];
+  const cache = {};
   const rows = existing ? existing.map((r) => [...r]) : [];
   const metricRows = [];
   let flushed = 0;
@@ -60,6 +62,11 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null, 
     },
     LockService: { getScriptLock: () => ({ tryLock: () => lockAvailable, releaseLock: () => {} }) },
     Utilities: { getUuid: () => "uuid-1", formatDate: () => today },
+    MailApp: {
+      sendEmail: (m) => { if (failMail) throw new Error("Service invoked too many times (simulado)"); mails.push(m); },
+      getRemainingDailyQuota: () => 100,
+    },
+    CacheService: { getScriptCache: () => ({ get: (k) => cache[k] || null, put: (k, v) => { cache[k] = v; } }) },
   };
   const ctx = vm.createContext(sandbox);
   vm.runInContext(SOURCE, ctx);
@@ -67,7 +74,7 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null, 
     const out = ctx.doPost({ postData: { contents: typeof body === "string" ? body : JSON.stringify(body) } });
     return JSON.parse(out.text);
   };
-  return { ctx, rows, metricRows, post, opened, flushed: () => flushed };
+  return { ctx, rows, metricRows, post, opened, mails, flushed: () => flushed };
 }
 
 /* El mismo payload que arma src/components/ContactSection.jsx. */
@@ -261,4 +268,67 @@ test("v4: la pestaña Chatbot v2 gana los contadores del analizador sin perder l
   assert.deepEqual([...env.metricRows[0]], [...V2_METRICS, ...V4_METRICS]);
   assert.deepEqual([...env.metricRows[1]], ["'2026-11-22", 5, 3, 1, 1]);
   assert.deepEqual([...env.metricRows[2]], ["'2026-11-23", 0, 0, 0, 0, 0, 1, 1, 0, 0]);
+});
+
+
+/* ---------- v5: correo de confirmación al cliente ---------- */
+const EMAIL_BODY = { ...PAYLOAD, name: "Fermin Prueba", channel: "analizador", language: "es", email: "cliente@example.com", preferredContact: "correo", consent: "sí", consentVersion: "2026-11-v1" };
+
+test("v5: con correo y consentimiento, envía UNA confirmación después de guardar", () => {
+  const env = createEnv();
+  assert.equal(env.post(EMAIL_BODY).ok, true);
+  assert.equal(env.rows.length, 2, "la fila se guardó");
+  assert.equal(env.mails.length, 1);
+  const m = env.mails[0];
+  assert.equal(m.to, "cliente@example.com");
+  assert.equal(m.subject, "Recibimos tu solicitud — Vínculos 360");
+  assert.match(m.body, /Hola Fermin,/);
+  assert.match(m.body, /energía eléctrica \(ZIP 77001\)/);
+  assert.match(m.body, /por correo/);
+  assert.match(m.body, /nunca te pediremos tu número de Seguro Social/);
+  assert.match(m.body, /responde a este correo con "NO"/);
+  assert.doesNotMatch(m.body + m.htmlBody, /xoom|acn|vivint|gratis|ahorr|cr[eé]dito|\$\d/i);
+  assert.equal(env.post(EMAIL_BODY).ok, true);
+  assert.equal(env.mails.length, 1, "no repite al mismo correo en 6 h");
+});
+
+test("v5: inglés y recordatorio de vencimiento", () => {
+  const env = createEnv();
+  env.post({ ...EMAIL_BODY, language: "en", preferredContact: "whatsapp" });
+  assert.equal(env.mails[0].subject, "We received your request — Vínculos 360");
+  assert.match(env.mails[0].body, /about electricity \(ZIP 77001\).*by WhatsApp/s);
+  const env2 = createEnv();
+  env2.post({ ...EMAIL_BODY, channel: "recordatorio", contractExpiration: "2027-03-15", consentVersion: "2026-11-r1" });
+  assert.equal(env2.mails[0].subject, "Tu recordatorio quedó listo — Vínculos 360");
+  assert.match(env2.mails[0].body, /el 15 de marzo de 2027/);
+});
+
+test("v5: sin correo, correo inválido o sin consentimiento no envía nada", () => {
+  for (const body of [PAYLOAD, { ...EMAIL_BODY, email: "no-es-correo" }, { ...EMAIL_BODY, consent: "" }]) {
+    const env = createEnv();
+    assert.equal(env.post(body).ok, true);
+    assert.equal(env.mails.length, 0);
+  }
+});
+
+test("v5: si el correo falla, el lead se confirma igual", () => {
+  const env = createEnv({ failMail: true });
+  const res = env.post(EMAIL_BODY);
+  assert.equal(res.ok, true);
+  assert.equal(env.rows.length, 2);
+});
+
+test("v5: se apaga con CONFIRMATION_EMAIL_ENABLED=false y no se envía si falla el guardado", () => {
+  const off = createEnv({ props: { CONFIRMATION_EMAIL_ENABLED: "false" } });
+  off.post(EMAIL_BODY);
+  assert.equal(off.mails.length, 0);
+  const broken = createEnv({ failAppend: true });
+  assert.equal(broken.post(EMAIL_BODY).ok, false);
+  assert.equal(broken.mails.length, 0);
+});
+
+test("v5: el HTML escapa el nombre (sin inyección)", () => {
+  const env = createEnv();
+  env.post({ ...EMAIL_BODY, name: "Ana <b>x</b>" });
+  assert.doesNotMatch(env.mails[0].htmlBody, /<b>x<\/b>/);
 });
