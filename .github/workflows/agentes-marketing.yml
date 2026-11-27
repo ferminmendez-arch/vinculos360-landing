@@ -19,6 +19,7 @@ on:
         options:
           - generar-borradores
           - revisar-afirmaciones
+          - verificar-meta
         default: generar-borradores
   pull_request:
     branches: [main]
@@ -103,6 +104,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash automation/scripts/alert-issue.sh "Generar borradores" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  verificar-meta:
+    name: Verificar conexión con Meta (no publica)
+    if: github.event_name == 'workflow_dispatch' && inputs.task == 'verificar-meta'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: facebook
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar
+        env:
+          META_PUBLISH_ENABLED: ${{ vars.META_PUBLISH_ENABLED }}
+          META_PAGE_ID: ${{ secrets.META_PAGE_ID }}
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: node automation/content/check-meta.mjs
 
   publicar:
     name: Programar publicaciones aprobadas
