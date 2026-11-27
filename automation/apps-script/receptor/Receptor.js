@@ -24,6 +24,8 @@
    por dirección cada 6 h. Se apaga con la propiedad
    CONFIRMATION_EMAIL_ENABLED = false. Las respuestas del cliente van a
    fermin.mendez@vinculos360.com (Reply-To; propiedad CONFIRMATION_REPLY_TO).
+   Con las propiedades MS_* configuradas, el correo sale directamente del
+   buzón del negocio en Microsoft 365 (ver docs/CORREO-DOMINIO.md).
 
    v2 (chatbot, compatible con v1): si el cuerpo trae claves extra del
    chatbot (channel, language, email, preferredContact, consent,
@@ -206,6 +208,58 @@ function receptorConfirmationEmail(data, lead) {
   return { to: email, subject: subject, body: lines.concat(["", ""], signature).join("\n\n"), htmlBody: html, name: RECEPTOR.FROM_NAME, replyTo: RECEPTOR.REPLY_TO };
 }
 
+/* ---------- Envío desde fermin.mendez@vinculos360.com (Microsoft 365) ----------
+   Si existen las propiedades MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET y
+   MS_SENDER, el correo sale del buzón del negocio con Microsoft Graph
+   (permiso de aplicación Mail.Send). Así pasa SPF/DKIM/DMARC del dominio.
+   Si faltan o Graph falla, se usa la cuenta de Google con Reply-To al negocio.
+   El secreto solo vive en las propiedades del script: nunca en el código. */
+
+function receptorGraphConfig() {
+  var p = PropertiesService.getScriptProperties();
+  var c = { tenant: p.getProperty("MS_TENANT_ID"), client: p.getProperty("MS_CLIENT_ID"), secret: p.getProperty("MS_CLIENT_SECRET"), sender: p.getProperty("MS_SENDER") };
+  return c.tenant && c.client && c.secret && c.sender ? c : null;
+}
+
+/* Cuerpo JSON para POST /users/{sender}/sendMail. Función pura (probada). */
+function receptorGraphMessage(msg) {
+  return {
+    message: {
+      subject: msg.subject,
+      body: { contentType: "HTML", content: msg.htmlBody },
+      toRecipients: [{ emailAddress: { address: msg.to } }],
+      replyTo: msg.replyTo ? [{ emailAddress: { address: msg.replyTo } }] : [],
+    },
+    saveToSentItems: true,
+  };
+}
+
+function receptorGraphToken(cfg) {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get("ms_token");
+  if (cached) return cached;
+  var res = UrlFetchApp.fetch("https://login.microsoftonline.com/" + encodeURIComponent(cfg.tenant) + "/oauth2/v2.0/token", {
+    method: "post",
+    payload: { client_id: cfg.client, client_secret: cfg.secret, scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials" },
+    muteHttpExceptions: true,
+  });
+  if (res.getResponseCode() !== 200) throw new Error("token " + res.getResponseCode());
+  var json = JSON.parse(res.getContentText());
+  cache.put("ms_token", json.access_token, Math.max(60, Math.min(3000, (json.expires_in || 3600) - 300)));
+  return json.access_token;
+}
+
+function receptorSendViaGraph(cfg, msg) {
+  var res = UrlFetchApp.fetch("https://graph.microsoft.com/v1.0/users/" + encodeURIComponent(cfg.sender) + "/sendMail", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + receptorGraphToken(cfg) },
+    payload: JSON.stringify(receptorGraphMessage(msg)),
+    muteHttpExceptions: true,
+  });
+  if (res.getResponseCode() !== 202) throw new Error("sendMail " + res.getResponseCode());
+}
+
 /* Envía la confirmación sin afectar nunca el resultado del lead. */
 function receptorSendConfirmation(data, lead) {
   try {
@@ -218,10 +272,22 @@ function receptorSendConfirmation(data, lead) {
     var cache = CacheService.getScriptCache();
     var key = "conf:" + msg.to;
     if (cache.get(key)) return "recent";
-    if (MailApp.getRemainingDailyQuota() < 5) return "quota";
-    MailApp.sendEmail(msg);
+    var via = "google";
+    var cfg = receptorGraphConfig();
+    if (cfg) {
+      try {
+        receptorSendViaGraph(cfg, msg);
+        via = "microsoft";
+      } catch (graphError) {
+        console.error("Graph: " + (graphError && graphError.message ? graphError.message : graphError) + " — se usa la cuenta de Google");
+      }
+    }
+    if (via === "google") {
+      if (MailApp.getRemainingDailyQuota() < 5) return "quota";
+      MailApp.sendEmail(msg);
+    }
     cache.put(key, "1", 21600); // 6 h (máximo de CacheService)
-    return "sent";
+    return "sent:" + via;
   } catch (e) {
     console.error("confirmación: " + (e && e.message ? e.message : e));
     return "error";

@@ -32,8 +32,9 @@ function makeSheet(name, rows, { failAppend = false } = {}) {
   };
 }
 
-function createEnv({ failAppend = false, lockAvailable = true, existing = null, standalone = false, props = {}, today = "2026-11-23", failMail = false } = {}) {
+function createEnv({ failAppend = false, lockAvailable = true, existing = null, standalone = false, props = {}, today = "2026-11-23", failMail = false, graph = null } = {}) {
   const mails = [];
+  const fetches = [];
   const cache = {};
   const rows = existing ? existing.map((r) => [...r]) : [];
   const metricRows = [];
@@ -67,6 +68,14 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null, 
       getRemainingDailyQuota: () => 100,
     },
     CacheService: { getScriptCache: () => ({ get: (k) => cache[k] || null, put: (k, v) => { cache[k] = v; } }) },
+    JSON,
+    UrlFetchApp: {
+      fetch: (url, opts) => {
+        fetches.push({ url, opts });
+        const r = graph ? graph(url, opts) : { code: 500, body: "" };
+        return { getResponseCode: () => r.code, getContentText: () => r.body };
+      },
+    },
   };
   const ctx = vm.createContext(sandbox);
   vm.runInContext(SOURCE, ctx);
@@ -74,7 +83,7 @@ function createEnv({ failAppend = false, lockAvailable = true, existing = null, 
     const out = ctx.doPost({ postData: { contents: typeof body === "string" ? body : JSON.stringify(body) } });
     return JSON.parse(out.text);
   };
-  return { ctx, rows, metricRows, post, opened, mails, flushed: () => flushed };
+  return { ctx, rows, metricRows, post, opened, mails, fetches, flushed: () => flushed };
 }
 
 /* El mismo payload que arma src/components/ContactSection.jsx. */
@@ -334,4 +343,39 @@ test("v5: el HTML escapa el nombre (sin inyección)", () => {
   const env = createEnv();
   env.post({ ...EMAIL_BODY, name: "Ana <b>x</b>" });
   assert.doesNotMatch(env.mails[0].htmlBody, /<b>x<\/b>/);
+});
+
+
+/* ---------- v5: envío desde el dominio (Microsoft Graph) ---------- */
+const MS = { MS_TENANT_ID: "tenant-x", MS_CLIENT_ID: "client-x", MS_CLIENT_SECRET: "secreto-x", MS_SENDER: "fermin.mendez@vinculos360.com" };
+const graphOk = (url) => (/oauth2/.test(url) ? { code: 200, body: JSON.stringify({ access_token: "tok", expires_in: 3599 }) } : { code: 202, body: "" });
+
+test("dominio: con las propiedades MS_* el correo sale del buzón de vinculos360.com por Graph", () => {
+  const env = createEnv({ props: MS, graph: graphOk });
+  assert.equal(env.post(EMAIL_BODY).ok, true);
+  assert.equal(env.mails.length, 0, "no usa la cuenta de Google");
+  const send = env.fetches.find((f) => /sendMail/.test(f.url));
+  assert.equal(send.url, "https://graph.microsoft.com/v1.0/users/fermin.mendez%40vinculos360.com/sendMail");
+  assert.equal(send.opts.headers.Authorization, "Bearer tok");
+  const body = JSON.parse(send.opts.payload);
+  assert.equal(body.message.toRecipients[0].emailAddress.address, "cliente@example.com");
+  assert.equal(body.message.subject, "Recibimos tu solicitud — Vínculos 360");
+  assert.equal(body.saveToSentItems, true);
+  const token = env.fetches.find((f) => /oauth2/.test(f.url));
+  assert.equal(token.opts.payload.grant_type, "client_credentials");
+  assert.ok(!JSON.stringify(body).includes("secreto-x"), "el secreto nunca va en el mensaje");
+});
+
+test("dominio: si Graph falla, envía por la cuenta de Google y el lead se confirma igual", () => {
+  const env = createEnv({ props: MS, graph: (url) => (/oauth2/.test(url) ? { code: 401, body: "" } : { code: 202, body: "" }) });
+  assert.equal(env.post(EMAIL_BODY).ok, true);
+  assert.equal(env.mails.length, 1);
+  assert.equal(env.mails[0].replyTo, "fermin.mendez@vinculos360.com");
+});
+
+test("dominio: sin configuración completa no llama a Microsoft", () => {
+  const env = createEnv({ props: { MS_TENANT_ID: "t" }, graph: graphOk });
+  env.post(EMAIL_BODY);
+  assert.equal(env.fetches.length, 0);
+  assert.equal(env.mails.length, 1);
 });
