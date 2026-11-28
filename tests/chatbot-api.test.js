@@ -1,4 +1,5 @@
 /* Pruebas de la Azure Function del chatbot (lógica pura, sin el host de Azure). */
+import { createHmac } from "node:crypto";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRateLimiter, clientIp, handleEvent, handleHealth, handleLead, isAllowedOrigin } from "../api/src/lib/handlers.js";
@@ -241,4 +242,63 @@ test("distribuidora por ZIP (Power to Choose): nombres cortos, varias, y falla s
   const res = await handleLead(request({ ...BODY, zipCode: "75201" }), { env: {}, fetchImpl, log: quiet, limiter: allowAll });
   assert.equal(res.status, 200);
   assert.doesNotMatch(fetchImpl.calls.find((c) => c.url.includes("script.google.com")).body.answers, /distribuidora/);
+});
+
+const CRM_URL = "https://kind-river-0a4356110-preview.centralus.4.azurestaticapps.net/api/ingest/lead";
+const CRM_ENV = { CRM_INGEST_ENABLED: "true", CRM_INGEST_URL: CRM_URL, CRM_INGEST_SECRET: "synthetic-test-key-with-32-or-more-bytes" };
+const crmOk = () => new Response(JSON.stringify({ ok: true, outcome: "created", leadId: "synthetic" }), { status: 201 });
+
+test("copia después de Sheets, firma el cuerpo y conserva la clave en los reintentos", async () => {
+  let copies = 0;
+  const fetchImpl = fakeFetch([
+    ["script.google.com", sheetOk],
+    [CRM_URL, () => ++copies === 1 ? new Response("", { status: 503 }) : crmOk()],
+  ]);
+  const submittedAt = new Date("2026-11-28T15:00:00.000Z");
+  const res = await handleLead(request({ ...BODY, entry: "analizador", preferredContact: "texto", contractEnd: "2027-01-07" }), {
+    env: CRM_ENV, fetchImpl, log: quiet, limiter: allowAll, now: () => submittedAt,
+  });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.jsonBody.saved, ["sheet"]);
+  const writes = fetchImpl.calls.filter(({ url }) => !String(url).includes("powertochoose"));
+  assert.match(writes[0].url, /script\.google\.com/);
+  assert.deepEqual(writes.slice(1).map(({ url }) => url), [CRM_URL, CRM_URL]);
+  for (const { opts, body } of writes.slice(1)) {
+    const timestamp = String(submittedAt.getTime());
+    const signature = createHmac("sha256", CRM_ENV.CRM_INGEST_SECRET).update(`${timestamp}.${opts.body}`).digest("hex");
+    assert.equal(opts.headers["X-V360-Timestamp"], timestamp);
+    assert.equal(opts.headers["X-V360-Signature"], signature);
+    assert.equal(opts.redirect, "error");
+    assert.equal(body.externalKey, writes[0].body.chatLeadId);
+    assert.equal(body.sourceKey, "analyzer");
+    assert.equal(body.preferredContact, "sms");
+    assert.equal(body.consentAt, submittedAt.toISOString());
+    assert.equal(body.consentGranted, true);
+    assert.deepEqual(body.bill, { billAmount: 200, monthlyKwh: 1000, centsPerKwh: 20, contractEnd: "2027-01-07", tdu: "CenterPoint" });
+    assert.equal("answers" in body, false);
+  }
+  assert.equal(writes[1].opts.body, writes[2].opts.body);
+});
+
+test("un rechazo permanente del CRM conserva el resultado de Sheets y registra solo el ID y el estado", async () => {
+  const warnings = [];
+  const fetchImpl = fakeFetch([["script.google.com", sheetOk], [CRM_URL, () => new Response("", { status: 401 })]]);
+  const res = await handleLead(request(BODY), { env: CRM_ENV, fetchImpl, log: { ...quiet, warn: (msg) => warnings.push(msg) }, limiter: allowAll });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.jsonBody.saved, ["sheet"]);
+  assert.equal(fetchImpl.calls.filter(({ url }) => url === CRM_URL).length, 1);
+  assert.deepEqual(warnings, [`lead ${res.jsonBody.id}: copia CRM pendiente de reconciliación (http_401)`]);
+});
+
+test("la copia queda inactiva sin habilitación, sin Sheets confirmado o con un destino ajeno", async () => {
+  for (const [env, sheet] of [
+    [{ ...CRM_ENV, CRM_INGEST_ENABLED: "false" }, sheetOk],
+    [{ ...CRM_ENV, LEADS_TABLE_SAS_URL: SAS }, sheetFail],
+    [{ ...CRM_ENV, CRM_INGEST_URL: "https://example.invalid/api/ingest/lead" }, sheetOk],
+  ]) {
+    const fetchImpl = fakeFetch([["script.google.com", sheet], ["table.core.windows.net", tableOk]]);
+    const res = await handleLead(request(BODY), { env, fetchImpl, log: quiet, limiter: allowAll });
+    assert.equal(res.status, 200);
+    assert.ok(fetchImpl.calls.every(({ url }) => /script\.google\.com|table\.core\.windows\.net|powertochoose/.test(url)));
+  }
 });

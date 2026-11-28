@@ -176,3 +176,17 @@ El correo de aviso incluye esa línea, sin nombre ni teléfono. Nada de esto se 
 - El mensaje lleva el enlace oficial de inscripción con el ID de IBO: `https://acn.xoomenergy.com/en/?p=04893385`. Se puede cambiar con la propiedad del script `ENROLL_URL_ELECTRICIDAD`.
 - El cliente escribe su identificación y su SSN directamente en el sitio del proveedor: ni el sitio, ni la hoja, ni WhatsApp los reciben.
 - **El sitio y el chat nunca deben pedir SSN, identificación ni datos bancarios.**
+
+## Copia a Sales Hub CRM
+
+La copia se ejecuta en la API del sitio después de una confirmación de Sheets. La hoja conserva el `ChatLeadId`, que la copia usa como `externalKey`. La respuesta al visitante y las notificaciones existentes mantienen sus destinos actuales. Los formularios que van directamente a Apps Script, incluidos los respaldos del navegador, quedan en Sheets para reconciliación.
+
+| Variable del servidor | Configuración |
+| --- | --- |
+| `CRM_INGEST_ENABLED` | Desactivada por defecto. El valor exacto `true` habilita la copia. |
+| `CRM_INGEST_URL` | Vista previa `https://kind-river-0a4356110-preview.centralus.4.azurestaticapps.net/api/ingest/lead`. Producción `https://crm.vinculos360.com/api/ingest/lead`. |
+| `CRM_INGEST_SECRET` | Secreto de al menos 32 bytes, igual al de la API receptora del CRM. Usa uno distinto por entorno, en la configuración privada del servidor. |
+
+Para probar en Azure, configura primero una **hoja de pruebas** en el entorno de vista previa del sitio y confirma que el CRM de vista previa usa almacenamiento en memoria. Configura el secreto en ambos servidores, habilita la copia en la vista previa y usa datos sintéticos. Comprueba la misma clave en la hoja y en el CRM. Verifica también que Sheets siga aceptando solicitudes si el CRM rechaza la firma o deja de responder.
+
+La copia tiene un máximo de dos intentos, de dos segundos cada uno. Se reintentan errores de transporte y estados transitorios conservando la clave. Si falla, el registro de la API anota el ID y el motivo para reconciliar con Sheets. Los datos siguen en la hoja. La recuperación posterior a esos intentos es manual. Antes de activar en producción, verifica el receptor firmado, acuerda quién revisa la reconciliación y confirma el tratamiento de reintentos de llaves secundarias en el CRM. Para detener la copia, cambia `CRM_INGEST_ENABLED` a `false`.

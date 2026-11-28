@@ -9,6 +9,7 @@
 ========================================================= */
 
 import { randomUUID } from "node:crypto";
+import { copyLeadToCrm } from "./crm-copy.js";
 import { isTexasZip, validateChatLead, validateEvent } from "./rules.js";
 import { lookupTdu } from "./tdu.js";
 import { insertTableEntity, leadToSheetBody, leadToTableEntity, postToSheet, readConfig } from "./sinks.js";
@@ -124,6 +125,11 @@ export async function handleLead(request, { env = process.env, fetchImpl = fetch
 
   if (!saved.length) {
     return json(502, { ok: false, result: "error", reason: "storage_unavailable" });
+  }
+  if (env.CRM_INGEST_ENABLED === "true" && saved.includes("sheet")) {
+    const copy = await copyLeadToCrm(lead, meta, { env, fetchImpl, now });
+    if (copy.ok) log.info?.(`lead ${id}: copia CRM confirmada`);
+    else log.warn?.(`lead ${id}: copia CRM pendiente de reconciliación (${copy.reason})`);
   }
   log.info?.(`lead ${id} guardado en ${saved.join("+")} (precalificado: ${prequalified})`);
   return json(200, { ok: true, result: "success", id, prequalified, savings: savings.level, saved });
